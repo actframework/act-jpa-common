@@ -39,13 +39,13 @@ public class GroupWhereComponentTest extends SqlPartTestBase {
     @Test
     public void test() {
         target = new GroupWhereComponent(LogicOperator.AND, comp1, comp2);
-        shouldBe("name = ?1 AND age <= ?2");
+        shouldBe("U.name = ?1 AND U.age <= ?2");
     }
 
     @Test
     public void test2() {
         target = new GroupWhereComponent(LogicOperator.OR, comp1, comp2.not());
-        shouldBe("name = ?1 OR NOT (age <= ?2)");
+        shouldBe("U.name = ?1 OR NOT (U.age <= ?2)");
     }
 
 

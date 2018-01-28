@@ -31,8 +31,8 @@ public class SimpleWhereExpressionTest extends SqlPartTestBase {
     @Test
     public void testEq() {
         exp = new SimpleWhereExpression("name", EQ);
-        exp.print(DefaultSqlDialect.INSTANCE, buf, paramCounter);
-        eq("name = ?1");
+        exp.print(DefaultSqlDialect.INSTANCE, buf, paramCounter, entityAliasPrefix);
+        eq("U.name = ?1");
     }
 
 }

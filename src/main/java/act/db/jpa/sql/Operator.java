@@ -47,7 +47,7 @@ public enum Operator {
     BETWEEN("between") {
         @Override
         public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
-            build.append(entityAliasPrefix).append(column).append(" < ?").append(ordinalId.incrementAndGet()).append(" AND ").append(column).append(" > ?").append(ordinalId.incrementAndGet());
+            build.append(entityAliasPrefix).append(column).append(" < ?").append(ordinalId.incrementAndGet()).append(" AND ").append(entityAliasPrefix).append(column).append(" > ?").append(ordinalId.incrementAndGet());
         }
     },
     LIKE("like") {

@@ -30,6 +30,8 @@ public class SqlPartTestBase extends TestBase {
     protected AtomicInteger paramCounter;
     protected SqlPart target;
     protected SqlDialect dialect = DefaultSqlDialect.INSTANCE;
+    protected String entityName = "User";
+    protected String entityAliasPrefix = "U.";
 
     @Before
     public void prepare() {
@@ -38,7 +40,7 @@ public class SqlPartTestBase extends TestBase {
     }
 
     void print() {
-        target.print(dialect, buf, paramCounter);
+        target.print(dialect, buf, paramCounter, entityAliasPrefix);
     }
 
     void shouldBe(String result) {

@@ -27,31 +27,31 @@ public class OrderByElementTest extends SqlPartTestBase {
     @Test
     public void testNormal() {
         target = new OrderByElement("name");
-        shouldBe("name");
+        shouldBe("U.name");
     }
 
     @Test
     public void testNormalWithAsc() {
         target = new OrderByElement("+name");
-        shouldBe("name");
+        shouldBe("U.name");
         prepare();
         target = new OrderByElement("name asc");
-        shouldBe("name");
+        shouldBe("U.name");
         prepare();
         target = new OrderByElement("name ASC");
-        shouldBe("name");
+        shouldBe("U.name");
     }
 
     @Test
     public void testNormalWithDesc() {
         target = new OrderByElement("-name");
-        shouldBe("name DESC");
+        shouldBe("U.name DESC");
         prepare();
         target = new OrderByElement("name desc");
-        shouldBe("name DESC");
+        shouldBe("U.name DESC");
         prepare();
         target = new OrderByElement("name DESC");
-        shouldBe("name DESC");
+        shouldBe("U.name DESC");
     }
 
     @Test(expected = IllegalArgumentException.class)

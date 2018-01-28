@@ -38,19 +38,19 @@ public class NotWhereExpressionTest extends SqlPartTestBase {
     @Test
     public void test() {
         target = new NotWhereExpression(component);
-        shouldBe("NOT (name = ?1)");
+        shouldBe("NOT (U.name = ?1)");
     }
 
     @Test
     public void testNotNot() {
         target = new NotWhereExpression(component).not();
-        shouldBe("name = ?1");
+        shouldBe("U.name = ?1");
     }
 
     @Test
     public void testNotBetween() {
         target = new NotWhereExpression(new SimpleWhereExpression("name", BETWEEN));
-        shouldBe("NOT (name < ?1 AND name > ?2)");
+        shouldBe("NOT (U.name < ?1 AND U.name > ?2)");
     }
 
 }

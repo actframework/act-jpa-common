@@ -29,71 +29,71 @@ public class OperatorTest extends SqlPartTestBase {
     @Test
     public void testEq() {
         print(EQ);
-        eq("name = ?1");
+        eq("U.name = ?1");
     }
 
     @Test
     public void testNE() {
         print(NE);
-        eq("name <> ?1");
+        eq("U.name <> ?1");
     }
 
     @Test
     public void testNotNull() {
         print(NOT_NULL);
-        eq("name IS NOT NULL");
+        eq("U.name IS NOT NULL");
     }
 
     @Test
     public void testIsNull() {
         print(IS_NULL);
-        eq("name IS NULL");
+        eq("U.name IS NULL");
     }
 
     @Test
     public void testLessThan() {
         print(LT);
-        eq("name < ?1");
+        eq("U.name < ?1");
     }
 
     @Test
     public void testLessThanOrEqualTo() {
         print(LTE);
-        eq("name <= ?1");
+        eq("U.name <= ?1");
     }
 
     @Test
     public void testGreaterThan() {
         print(GT);
-        eq("name > ?1");
+        eq("U.name > ?1");
     }
 
     @Test
     public void testGreaterThanOrEqualTo() {
         print(GTE);
-        eq("name >= ?1");
+        eq("U.name >= ?1");
     }
 
     @Test
     public void testBetween() {
         print(BETWEEN);
-        eq("name < ?1 AND name > ?2");
+        eq("U.name < ?1 AND U.name > ?2");
     }
 
     @Test
     public void testLike() {
         print(LIKE);
-        eq("name LIKE ?1");
+        eq("U.name LIKE ?1");
     }
 
     @Test
     public void testCaseInsensitiveLike() {
         print(ILIKE);
-        eq("LOWER(name) LIKE LOWER(CONCAT('%', ?1, '%'))");
+        eq("LOWER(U.name) LIKE LOWER(CONCAT('%', ?1, '%'))");
     }
 
     private void print(Operator op) {
-        op.print(dialect, buf, "name", paramCounter);
+        op.print(dialect, buf, "name", paramCounter, entityAliasPrefix);
     }
 
 }

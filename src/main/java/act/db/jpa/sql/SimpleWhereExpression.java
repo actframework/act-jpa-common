@@ -35,8 +35,8 @@ public class SimpleWhereExpression extends WhereComponentBase {
     }
 
     @Override
-    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger ordinalId) {
-        operator.print(dialect, builder, column, ordinalId);
+    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger ordinalId, String entityAliasPrefix) {
+        operator.print(dialect, builder, column, ordinalId, entityAliasPrefix);
     }
 
 }

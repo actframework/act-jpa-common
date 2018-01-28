@@ -49,11 +49,19 @@ public class JPAContext extends DestroyableBase {
     }
 
     private boolean noTx;
+    private boolean rollback;
     private Map<String, Info> data = new HashMap<>();
 
-    private JPAContext(boolean noTx) {
+    private JPAContext() {
         super(true);
-        this.noTx = noTx;
+    }
+
+    private void _setNoTx() {
+        this.noTx = true;
+    }
+
+    private void _setRollback() {
+        this.rollback = true;
     }
 
     @Override
@@ -61,7 +69,7 @@ public class JPAContext extends DestroyableBase {
         for (Info info : data.values()) {
             EntityTransaction tx = info.tx;
             if (null != tx && tx.isActive()) {
-                if (tx.getRollbackOnly()) {
+                if (rollback || tx.getRollbackOnly()) {
                     tx.rollback();
                 } else {
                     tx.commit();
@@ -105,9 +113,21 @@ public class JPAContext extends DestroyableBase {
         return ensureContext()._dialect(jpa);
     }
 
-    public static void init(boolean noTx) {
+    public static void init() {
         E.illegalStateIf(null != cur_.get(), "JPAContext already set");
-        cur_.set(new JPAContext(noTx));
+        cur_.set(new JPAContext());
+    }
+
+    public static void setNoTx() {
+        JPAContext ctx = ensureContext();
+        ctx._setNoTx();
+    }
+
+    public static void setRollback() {
+        JPAContext ctx = cur_.get();
+        if (null != ctx) {
+            ctx._setRollback();
+        }
     }
 
     public static void close() {

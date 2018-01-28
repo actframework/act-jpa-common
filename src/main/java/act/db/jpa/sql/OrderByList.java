@@ -76,23 +76,22 @@ public class OrderByList implements SqlPart {
     }
 
     @Override
-    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         int sz = list.size();
         if (0 == sz) {
             return;
         }
-        builder.append(LEADING);
-        list.get(0).print(dialect, builder, paramId);
+        list.get(0).print(dialect, builder, paramId, entityAliasPrefix);
         for (int i = 1; i < sz; ++i) {
             builder.append(", ");
-            list.get(i).print(dialect, builder, paramId);
+            list.get(i).print(dialect, builder, paramId, entityAliasPrefix);
         }
     }
 
-    public void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+    public void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         if (!isEmpty()) {
             builder.append(" ORDER BY ");
-            print(dialect, builder, paramId);
+            print(dialect, builder, paramId, entityAliasPrefix);
         }
     }
 

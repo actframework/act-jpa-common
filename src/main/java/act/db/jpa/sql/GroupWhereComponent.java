@@ -44,22 +44,22 @@ public class GroupWhereComponent extends WhereComponentBase {
     }
 
     @Override
-    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         WhereComponent first = subComponents.get(0);
-        first.print(dialect, builder, paramId);
+        first.print(dialect, builder, paramId, entityAliasPrefix);
         int sz = subComponents.size();
         for (int i = 1; i < sz; ++i) {
             op.print(builder);
-            subComponents.get(i).print(dialect, builder, paramId);
+            subComponents.get(i).print(dialect, builder, paramId, entityAliasPrefix);
         }
     }
 
-    private void printSubComponent(SqlDialect dialect, WhereComponent subComponent, StringBuilder builder, AtomicInteger paramId) {
+    private void printSubComponent(SqlDialect dialect, WhereComponent subComponent, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         boolean subIsGroup = subComponent instanceof GroupWhereComponent;
         if (subIsGroup) {
             builder.append("(");
         }
-        subComponent.print(dialect, builder, paramId);
+        subComponent.print(dialect, builder, paramId, entityAliasPrefix);
         if (subIsGroup) {
             builder.append(")");
         }

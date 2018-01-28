@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class WhereComponentBase implements WhereComponent {
 
     @Override
-    public void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+    public void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         builder.append(" WHERE ");
-        print(dialect, builder, paramId);
+        print(dialect, builder, paramId, entityAliasPrefix);
     }
 
     @Override

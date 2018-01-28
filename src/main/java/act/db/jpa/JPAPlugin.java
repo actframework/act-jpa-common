@@ -21,20 +21,22 @@ package act.db.jpa;
  */
 
 import act.app.ActionContext;
-import act.app.ActionContext.ActionContextDestroyed;
 import act.app.App;
 import act.db.DbPlugin;
 import act.db.jpa.sql.Operator;
 import act.event.ActEventListenerBase;
+import act.handler.builtin.controller.ActionHandlerInvoker;
+import act.handler.builtin.controller.ExceptionInterceptor;
+import act.handler.builtin.controller.RequestHandlerProxy;
 import act.handler.builtin.controller.impl.ReflectedHandlerInvoker;
-import act.handler.event.ReflectedHandlerInvokerInit;
-import act.handler.event.ReflectedHandlerInvokerInvoke;
+import act.handler.event.*;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
+import org.osgl.mvc.result.Result;
 import osgl.version.Version;
 import osgl.version.Versioned;
 
-import java.util.Map;
+import java.util.EventObject;
 
 // TODO - support JTA Transactional
 @Versioned
@@ -43,7 +45,11 @@ public abstract class JPAPlugin extends DbPlugin {
     public static final Logger LOGGER = LogManager.get(JPAPlugin.class);
 
     public static final String ATTR_NO_TRANSACTION = "no-trans";
-
+    public static final String CONF_DDL = "jpa.ddl";
+    public static final String CONF_DDL_CREATE = "create";
+    public static final String CONF_DDEL_CREATE_DROP = "create-drop";
+    public static final String CONF_DDL_UPDATE = "update";
+    public static final String CONF_DDL_NONE = "none";
     public static final Version VERSION = Version.get();
     public static final String CONF_MAPPING_FILES = "mapping-file";
 
@@ -71,63 +77,49 @@ public abstract class JPAPlugin extends DbPlugin {
                 Object noTrans = invoker.attribute(ATTR_NO_TRANSACTION);
                 if (null != noTrans) {
                     context.attribute(ATTR_NO_TRANSACTION, noTrans);
+                    JPAContext.setNoTx();
                 }
             }
-        }).bind(ActionContextDestroyed.class, new ActEventListenerBase<ActionContextDestroyed>() {
+        }).bind(PostHandle.class, new ActEventListenerBase<PostHandle>() {
             @Override
-            public void on(ActionContextDestroyed event) {
+            public void on(PostHandle event) {
+                // try close JPAContext anyway
                 JPAContext.close();
+            }
+        }).bind(PreHandle.class, new ActEventListenerBase() {
+            @Override
+            public void on(EventObject event) {
+                JPAContext.init();
+            }
+        }).bind(BeforeResultCommit.class, new ActEventListenerBase<BeforeResultCommit>() {
+            @Override
+            public void on(BeforeResultCommit event) throws Exception {
+                JPAContext.close();
+            }
+        });
+        RequestHandlerProxy.registerGlobalInterceptor(new ExceptionInterceptor() {
+            @Override
+            protected Result internalHandle(Exception e, ActionContext actionContext) {
+                JPAContext.setRollback();
+                return null;
+            }
+
+            @Override
+            public void accept(ActionHandlerInvoker.Visitor visitor) {
+
+            }
+
+            @Override
+            public boolean sessionFree() {
+                return true;
+            }
+
+            @Override
+            public boolean express() {
+                return true;
             }
         });
     }
 
-    // The `getDefaultDialect` code come from PlayFramework v1.x JPAPlugin
-    public static String getDefaultDialect(Map<String, String> dbConfig, String driver) {
-        String dialect = dbConfig.get("jpa.dialect");
-        if (dialect != null) {
-            return dialect;
-        } else if ("org.h2.Driver".equals(driver)) {
-            return "org.hibernate.dialect.H2Dialect";
-        } else if ("org.hsqldb.jdbcDriver".equals(driver)) {
-            return "org.hibernate.dialect.HSQLDialect";
-        } else if ("com.mysql.jdbc.Driver".equals(driver)) {
-            return "play.db.jpa.MySQLDialect";
-        } else if ("org.postgresql.Driver".equals(driver)) {
-            return "org.hibernate.dialect.PostgreSQLDialect";
-        } else if ("com.ibm.db2.jdbc.app.DB2Driver".equals(driver)) {
-            return "org.hibernate.dialect.DB2Dialect";
-        } else if ("com.ibm.as400.access.AS400JDBCDriver".equals(driver)) {
-            return "org.hibernate.dialect.DB2400Dialect";
-        } else if ("com.ibm.as400.access.AS390JDBCDriver".equals(driver)) {
-            return "org.hibernate.dialect.DB2390Dialect";
-        } else if ("oracle.jdbc.OracleDriver".equals(driver)) {
-            return "org.hibernate.dialect.Oracle10gDialect";
-        } else if ("com.sybase.jdbc2.jdbc.SybDriver".equals(driver)) {
-            return "org.hibernate.dialect.SybaseAnywhereDialect";
-        } else if ("com.microsoft.jdbc.sqlserver.SQLServerDriver".equals(driver)) {
-            return "org.hibernate.dialect.SQLServerDialect";
-        } else if ("com.sap.dbtech.jdbc.DriverSapDB".equals(driver)) {
-            return "org.hibernate.dialect.SAPDBDialect";
-        } else if ("com.informix.jdbc.IfxDriver".equals(driver)) {
-            return "org.hibernate.dialect.InformixDialect";
-        } else if ("com.ingres.jdbc.IngresDriver".equals(driver)) {
-            return "org.hibernate.dialect.IngresDialect";
-        } else if ("progress.sql.jdbc.JdbcProgressDriver".equals(driver)) {
-            return "org.hibernate.dialect.ProgressDialect";
-        } else if ("com.mckoi.JDBCDriver".equals(driver)) {
-            return "org.hibernate.dialect.MckoiDialect";
-        } else if ("InterBase.interclient.Driver".equals(driver)) {
-            return "org.hibernate.dialect.InterbaseDialect";
-        } else if ("com.pointbase.jdbc.jdbcUniversalDriver".equals(driver)) {
-            return "org.hibernate.dialect.PointbaseDialect";
-        } else if ("com.frontbase.jdbc.FBJDriver".equals(driver)) {
-            return "org.hibernate.dialect.FrontbaseDialect";
-        } else if ("org.firebirdsql.jdbc.FBDriver".equals(driver)) {
-            return "org.hibernate.dialect.FirebirdDialect";
-        } else {
-            throw new UnsupportedOperationException("I do not know which hibernate dialect to use with "
-                    + driver + " and I cannot guess it, use the property jpa.dialect in config file");
-        }
-    }
 
 }

@@ -30,14 +30,14 @@ public enum Operator {
     NE("<>", "ne", "neq"),
     NOT_NULL("not_null", "notNull") {
         @Override
-        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId) {
-            build.append(column).append(" IS NOT NULL");
+        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
+            build.append(entityAliasPrefix).append(column).append(" IS NOT NULL");
         }
     },
     IS_NULL("is_null", "isNull") {
         @Override
-        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId) {
-            build.append(column).append(" IS NULL");
+        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
+            build.append(entityAliasPrefix).append(column).append(" IS NULL");
         }
     },
     LT("<", "lt", "lessThan", "less_than"),
@@ -46,21 +46,21 @@ public enum Operator {
     GTE(">=", "gte", "greaterThanOrEqualTo", "greater_than_or_equal_to"),
     BETWEEN("between") {
         @Override
-        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId) {
-            build.append(column).append(" < ?").append(ordinalId.incrementAndGet()).append(" AND ").append(column).append(" > ?").append(ordinalId.incrementAndGet());
+        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
+            build.append(entityAliasPrefix).append(column).append(" < ?").append(ordinalId.incrementAndGet()).append(" AND ").append(column).append(" > ?").append(ordinalId.incrementAndGet());
         }
     },
     LIKE("like") {
         @Override
-        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId) {
-            build.append(column).append(" LIKE ?").append(ordinalId.incrementAndGet());
+        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
+            build.append(entityAliasPrefix).append(column).append(" LIKE ?").append(ordinalId.incrementAndGet());
         }
     },
     ILIKE("ilike") {
         @Override
-        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId) {
+        public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
             String fnLower = dialect.lowerCaseFunction();
-            build.append(fnLower).append("(").append(column).append(") LIKE ")
+            build.append(fnLower).append("(").append(entityAliasPrefix).append(column).append(") LIKE ")
                     .append(fnLower).append("(CONCAT('%', ?")
                     .append(ordinalId.incrementAndGet()).append(", '%'))");
         }
@@ -75,7 +75,7 @@ public enum Operator {
         }
     }
 
-    public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId) {
-        build.append(column).append(" ").append(op).append(" ?").append(ordinalId.incrementAndGet());
+    public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {
+        build.append(entityAliasPrefix).append(column).append(" ").append(op).append(" ?").append(ordinalId.incrementAndGet());
     }
 }

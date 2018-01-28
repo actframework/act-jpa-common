@@ -22,7 +22,10 @@ package act.db.jpa;
 
 import org.osgl.$;
 import org.osgl.util.C;
+import org.osgl.util.E;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
@@ -48,6 +51,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
     private final List<Class> managedClasses;
     private final List<String> mappingFileNames;
     private final Properties properties;
+    private final ClassLoader classLoader;
 
     private PersistenceUnitTransactionType transactionType = PersistenceUnitTransactionType.RESOURCE_LOCAL;
 
@@ -61,13 +65,15 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
             String persistenceUnitName,
             List<Class> managedClasses,
             List<String> mappingFileNames,
-            Properties properties
+            Properties properties,
+            ClassLoader classLoader
     ) {
         this.persistenceProviderClass = persistenceProviderClass;
         this.persistenceUnitName = persistenceUnitName;
         this.managedClasses = managedClasses;
         this.mappingFileNames = mappingFileNames;
         this.properties = properties;
+        this.classLoader = $.notNull(classLoader);
     }
 
     @Override
@@ -121,7 +127,11 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     @Override
     public URL getPersistenceUnitRootUrl() {
-        return null;
+        try {
+            return new File(".").toURI().toURL();
+        } catch (IOException e) {
+            throw E.ioException(e);
+        }
     }
 
     @Override
@@ -161,7 +171,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     @Override
     public ClassLoader getClassLoader() {
-        return Thread.currentThread().getContextClassLoader();
+        return classLoader;
     }
 
     @Override
@@ -172,5 +182,9 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
     @Override
     public ClassLoader getNewTempClassLoader() {
         return null;
+    }
+
+    public static void main(String[] args) throws Exception {
+        new URL("file:/jpa-common");
     }
 }

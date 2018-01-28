@@ -20,18 +20,26 @@ package act.db.jpa.sql;
  * #L%
  */
 
+import static act.db.jpa.sql.SqlPart.Util.entityAlias;
+
 import org.osgl.$;
 import org.osgl.util.C;
 import org.osgl.util.E;
+import org.osgl.util.S;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public abstract class Action implements SqlPart {
-    protected final String entityName;
+    protected final String fromTarget;
+    protected final String entityShort;
+    protected final String entityShortPrefix;
 
     public Action(String entityName) {
-        this.entityName = $.notNull(entityName);
+        String alias = entityAlias(entityName);
+        this.entityShort = S.wrap(alias, ' ');
+        this.entityShortPrefix = S.concat(" ", alias, ".");
+        this.fromTarget = S.concat(entityName, this.entityShort);
     }
 
     public static class Select extends Action {
@@ -48,16 +56,16 @@ public abstract class Action implements SqlPart {
         }
 
         @Override
-        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
             int len = columns.size();
             if (0 == len) {
-                builder.append("FROM ").append(entityName);
+                builder.append("SELECT").append(entityShort).append("FROM ").append(fromTarget);
             } else {
-                builder.append("SELECT ").append(columns.get(0));
+                builder.append("SELECT").append(entityShortPrefix).append(columns.get(0));
                 for (int i = 1; i < len; ++i) {
-                    builder.append(", ").append(columns.get(i));
+                    builder.append(",").append(entityShortPrefix).append(columns.get(i));
                 }
-                builder.append(" FROM ").append(entityName);
+                builder.append(" FROM ").append(fromTarget);
             }
         }
     }
@@ -68,8 +76,8 @@ public abstract class Action implements SqlPart {
         }
 
         @Override
-        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
-            builder.append("DELETE FROM ").append(entityName);
+        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
+            builder.append("DELETE FROM ").append(fromTarget);
         }
     }
 
@@ -79,8 +87,8 @@ public abstract class Action implements SqlPart {
         }
 
         @Override
-        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
-            builder.append("SELECT COUNT(*) FROM ").append(entityName);
+        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
+            builder.append("SELECT COUNT(").append(entityShort).append(") FROM ").append(fromTarget);
         }
     }
 
@@ -100,10 +108,10 @@ public abstract class Action implements SqlPart {
         }
 
         @Override
-        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
-            builder.append("UPDATE ").append(entityName);
+        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
+            builder.append("UPDATE ").append(fromTarget);
             for (String column : columns) {
-                builder.append(" SET ").append(column).append(" = ?").append(paramId.incrementAndGet());
+                builder.append(" SET ").append(entityShortPrefix).append(column).append(" = ?").append(paramId.incrementAndGet());
             }
         }
     }

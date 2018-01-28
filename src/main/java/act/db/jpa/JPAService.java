@@ -22,7 +22,6 @@ package act.db.jpa;
 
 import act.Act;
 import act.app.App;
-import act.app.event.SysEventId;
 import act.db.DB;
 import act.db.Dao;
 import act.db.DbService;
@@ -32,6 +31,7 @@ import act.db.jpa.sql.SqlDialect;
 import act.db.meta.EntityClassMetaInfo;
 import act.db.meta.EntityFieldMetaInfo;
 import act.db.meta.EntityMetaInfoRepo;
+import act.db.sql.DataSourceConfig;
 import act.db.sql.SqlDbService;
 import org.osgl.$;
 import org.osgl.util.C;
@@ -62,14 +62,14 @@ public abstract class JPAService extends SqlDbService {
 
     public JPAService(final String dbId, final App app, final Map<String, String> config) {
         super(dbId, app, config);
-        final JPAService me = this;
-        app.jobManager().on(SysEventId.DEPENDENCY_INJECTOR_PROVISIONED, new Runnable() {
-            @Override
-            public void run() {
-                entityMetaInfoRepo = app.entityMetaInfoRepo().forDb(dbId);
-                me.emFactory = createEntityManagerFactory(dbId, config);
-            }
-        });
+    }
+
+    @Override
+    protected void dataSourceProvided(DataSource dataSource, DataSourceConfig dataSourceConfig) {
+        super.dataSourceProvided(dataSource, dataSourceConfig);
+        String dbId = id();
+        entityMetaInfoRepo = app().entityMetaInfoRepo().forDb(dbId);
+        this.emFactory = createEntityManagerFactory(dbId, dataSource);
     }
 
     @Override
@@ -180,11 +180,14 @@ public abstract class JPAService extends SqlDbService {
      * ```
      *
      * @param properties the properties contains common JPA configuration
-     * @param dbConfig the user configuration
      * @return the properties with specific service configurations added in.
      */
-    protected Properties processProperties(Properties properties, Map<String, String> dbConfig) {
+    protected Properties processProperties(Properties properties) {
         return properties;
+    }
+
+    protected List<Class> entityClasses() {
+        return C.list(entityMetaInfoRepo.entityClasses());
     }
 
     String lastModifiedColumn(Class<?> modelClass) {
@@ -227,29 +230,30 @@ public abstract class JPAService extends SqlDbService {
         return entityMetaInfoRepo.classMetaInfo(modelClass);
     }
 
-    private EntityManagerFactory createEntityManagerFactory(String dbName, Map<String, String> config) {
-        PersistenceUnitInfo persistenceUnitInfo = persistenceUnitInfo(dbName, config);
+    private EntityManagerFactory createEntityManagerFactory(String dbName, DataSource dataSource) {
+        PersistenceUnitInfoImpl persistenceUnitInfo = persistenceUnitInfo(dbName);
+        persistenceUnitInfo.setNonJtaDataSource(dataSource);
         return createEntityManagerFactory(persistenceUnitInfo);
     }
 
-    private PersistenceUnitInfo persistenceUnitInfo(String dbName, Map<String, String> dbConfig) {
-        Properties properties = properties(dbName, dbConfig);
-        properties = processProperties(properties, dbConfig);
+    private PersistenceUnitInfoImpl persistenceUnitInfo(String dbName) {
+        Properties properties = properties();
+        properties = processProperties(properties);
         List<Class> managedClasses = C.list(entityMetaInfoRepo.entityClasses());
         return persistenceUnitInfo(
                 persistenceProviderClass().getName(),
-                dbName, managedClasses, mappingFiles(dbConfig), properties);
+                dbName, managedClasses, mappingFiles(), properties);
     }
 
-    private Properties properties(String dbName, Map<String, String> dbConfig) {
+    private Properties properties() {
         Properties properties = new Properties();
-        properties.putAll(dbConfig);
+        properties.putAll(config.rawConf);
         properties.put("javax.persistence.transaction", "RESOURCE_LOCAL");
         return properties;
     }
 
-    private List<String> mappingFiles(Map<String, String> dbConfig) {
-        String mappingFiles = dbConfig.get(JPAPlugin.CONF_MAPPING_FILES);
+    private List<String> mappingFiles() {
+        String mappingFiles = config.rawConf.get(JPAPlugin.CONF_MAPPING_FILES);
         return null == mappingFiles ? C.<String>list() : C.list(mappingFiles);
     }
 
@@ -261,7 +265,7 @@ public abstract class JPAService extends SqlDbService {
             Properties properties
     ) {
         return new PersistenceUnitInfoImpl(persistenceProviderClass,
-                persistenceUnitName, managedClasses, mappingFileNames, properties);
+                persistenceUnitName, managedClasses, mappingFileNames, properties, app().classLoader());
     }
 
     private void postDaoConstructor(JPADao dao) {
@@ -286,6 +290,23 @@ public abstract class JPAService extends SqlDbService {
             this.expression = expression;
             this.type = type;
             this.columns = C.listOf(columns);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            SQLKey sqlKey = (SQLKey) o;
+            return type == sqlKey.type &&
+                    $.eq(expression, sqlKey.expression) &&
+                    $.eq(columns, sqlKey.columns) &&
+                    $.eq(entityClass, sqlKey.entityClass);
+        }
+
+        @Override
+        public int hashCode() {
+
+            return $.hc(entityClass, expression, type, columns);
         }
     }
 

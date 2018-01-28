@@ -28,6 +28,8 @@ import act.db.DB;
 import act.db.DaoBase;
 import act.db.Model;
 import act.db.jpa.sql.SQL;
+import act.inject.param.NoBind;
+import act.util.General;
 import org.osgl.$;
 import org.osgl.util.E;
 import org.osgl.util.S;
@@ -38,6 +40,8 @@ import java.util.Collection;
 import java.util.List;
 import javax.persistence.EntityManager;
 
+@General
+@NoBind
 public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JPAQuery<MODEL_TYPE>> {
 
     private volatile JPAService _jpa;
@@ -118,7 +122,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     @Override
     public long countBy(String expression, Object... values) throws IllegalArgumentException {
-        return q(expression, values).count();
+        return createCountQuery(expression, values).count();
     }
 
     @Override
@@ -212,7 +216,8 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     public JPAQuery<MODEL_TYPE> q(SQL.Type type, String expression, Object... values) {
         E.unsupportedIf(SQL.Type.UPDATE == type, "UPDATE not supported in q() API");
-        JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa(), em(), modelClass, type, expression);
+        JPAService jpa = jpa();
+        JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa, em(jpa), modelClass, type, expression);
         int len = values.length;
         for (int i = 0; i < len; ++i) {
             q.setParameter(i + 1, values[i]);
@@ -231,7 +236,8 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     public JPAQuery<?> createFindQuery(String fieldList, String expression, Object... values) {
         String[] columns = fieldList.split(S.COMMON_SEP);
-        JPAQuery<?> q = new JPAQuery<>(jpa(), em(), modelClass, SQL.Type.FIND, expression, columns);
+        JPAService jpa = jpa();
+        JPAQuery<?> q = new JPAQuery<>(jpa, em(jpa), modelClass, SQL.Type.FIND, expression, columns);
         int len = values.length;
         for (int i = 0; i < len; ++i) {
             q.setParameter(i + 1, values[i]);
@@ -245,7 +251,8 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     public JPAQuery<MODEL_TYPE> createUpdateQuery(String fieldList, String expression, Object... values) {
         String[] columns = fieldList.split(S.COMMON_SEP);
-        JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa(), em(), modelClass, SQL.Type.UPDATE, expression, columns);
+        JPAService jpa = jpa();
+        JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa, JPAContext.em(jpa), modelClass, SQL.Type.UPDATE, expression, columns);
         int len = values.length;
         for (int i = 0; i < len; ++i) {
             q.setParameter(i + 1, values[i]);
@@ -270,5 +277,8 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     private EntityManager em() {
         return JPAContext.em(jpa());
+    }
+    private EntityManager em(JPAService jpa) {
+        return JPAContext.em(jpa);
     }
 }

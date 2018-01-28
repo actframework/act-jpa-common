@@ -33,9 +33,9 @@ public class NotWhereExpression extends WhereComponentBase {
     }
 
     @Override
-    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         builder.append("NOT (");
-        target.print(dialect, builder, paramId);
+        target.print(dialect, builder, paramId, entityAliasPrefix);
         builder.append(")");
     }
 

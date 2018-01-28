@@ -65,19 +65,23 @@ public class SQL {
         protected abstract Builder startParsing(String entity, String... columns);
     }
 
+    private String entityName;
+    private String entityAliasPrefix;
     private Action action;
     private WhereComponent where;
     private OrderByList orderBy;
     private String rawSql;
 
-    private SQL(Action action, WhereComponent where, OrderByList orderBy) {
+    private SQL(String entityName, Action action, WhereComponent where, OrderByList orderBy) {
+        this.entityName = entityName;
+        this.entityAliasPrefix = entityName.substring(0, 1) + ".";
         this.action = action;
         this.where = where;
         this.orderBy = orderBy;
     }
 
     private SQL(SQL copy) {
-        this(copy.action, copy.where, copy.orderBy);
+        this(copy.entityName, copy.action, copy.where, copy.orderBy);
     }
 
     private SQL(String rawSql) {
@@ -92,6 +96,9 @@ public class SQL {
      * @return an new SQL instance created from this SQL with order by list specified
      */
     public SQL withOrderBy(String... orderByList) {
+        if (null == orderByList) {
+            return this;
+        }
         OrderByList list = Parser.parseOrderBy(orderByList);
         if (list.isEmpty()) {
             return this;
@@ -100,7 +107,7 @@ public class SQL {
         if (null == sql.orderBy) {
             sql.orderBy = list;
         } else {
-            sql.orderBy.merge(list);
+            sql.orderBy = sql.orderBy.merge(list);
         }
         return sql;
     }
@@ -109,39 +116,44 @@ public class SQL {
         if (null == rawSql) {
             StringBuilder buf = new StringBuilder();
             AtomicInteger paramCounter = new AtomicInteger();
-            action.print(dialect, buf, paramCounter);
-            where.printWithLead(dialect, buf, paramCounter);
-            orderBy.printWithLead(dialect, buf, paramCounter);
+            action.print(dialect, buf, paramCounter, entityAliasPrefix);
+            where.printWithLead(dialect, buf, paramCounter, entityAliasPrefix);
+            orderBy.printWithLead(dialect, buf, paramCounter, entityAliasPrefix);
             rawSql = buf.toString();
         }
         return rawSql;
     }
 
     public static class Builder {
+        private String entityName;
         private Action action;
         private WhereComponent where = WhereComponent.EMPTY;
         private OrderByList orderBy = OrderByList.EMPTY_LIST;
         public SQL toSQL() {
-            return new SQL(action, where, orderBy);
+            return new SQL(entityName, action, where, orderBy);
         }
         public Builder select(String entityName, String... columns) {
             ensureNoAction();
             action = new Action.Select(entityName, columns);
+            this.entityName = entityName;
             return this;
         }
         public Builder count(String entityName) {
             ensureNoAction();
             action = new Action.Count(entityName);
+            this.entityName = entityName;
             return this;
         }
         public Builder delete(String entityName) {
             ensureNoAction();
             action = new Action.Delete(entityName);
+            this.entityName = entityName;
             return this;
         }
         public Builder update(String entityName, String... columns) {
             ensureNoAction();
             action = new Action.Update(entityName, columns);
+            this.entityName = entityName;
             return this;
         }
 
@@ -153,14 +165,17 @@ public class SQL {
     public static class Parser {
         public static SQL parse(Type type, String entityName, String expression, String... columns) {
             if (S.isBlank(expression)) {
-                return new SQL("FROM " + entityName);
+                String entityAlias = SqlPart.Util.entityAlias(entityName);
+                return new SQL(S.fmt("SELECT %s FROM %s %s", entityAlias, entityName, entityAlias));
             }
             String lowerCase = expression.trim().toLowerCase();
             if (lowerCase.startsWith("select ") || lowerCase.startsWith("update ") || lowerCase.startsWith("delete ") || lowerCase.startsWith("from ")) {
                 return new SQL(expression);
             }
             if (lowerCase.startsWith("order by ")) {
-                return new SQL(S.concat("FROM ", entityName, " ", expression));
+                Builder builder = new Builder().select(entityName);
+                builder.orderBy = OrderByList.parse(expression.trim());
+                return builder.toSQL();
             }
             Builder builder = type.startParsing(entityName, columns);
             return doParse(builder, expression).toSQL();

@@ -41,15 +41,15 @@ public interface WhereComponent extends SqlPart {
         }
 
         @Override
-        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+        public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         }
 
         @Override
-        public void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
+        public void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
         }
     };
 
-    void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId);
+    void printWithLead(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix);
 
 
     /**

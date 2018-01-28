@@ -45,6 +45,9 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     private FlushModeType flushMode;
     private LockModeType lockMode;
     private Query q;
+    private Map<Integer, Object> params = new HashMap<>();
+    private Map<Integer, $.T2<Calendar, TemporalType>> calendarParams = new HashMap<>();
+    private Map<Integer, $.T2<Date, TemporalType>> dateParams = new HashMap<>();
 
     public JPAQuery(JPAService svc, EntityManager em, Class entityClass, SQL.Type type, String expression, String... columns) {
         this.svc = $.notNull(svc);
@@ -240,19 +243,28 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
 
     @Override
     public Query setParameter(int position, Object value) {
-        q().setParameter(position, value);
+        if (null != q) {
+            q.setParameter(position, value);
+        }
+        params.put(position, value);
         return this;
     }
 
     @Override
     public Query setParameter(int position, Calendar value, TemporalType temporalType) {
-        q().setParameter(position, value, temporalType);
+        if (null != q) {
+            q.setParameter(position, value, temporalType);
+        }
+        calendarParams.put(position, $.T2(value, temporalType));
         return this;
     }
 
     @Override
     public Query setParameter(int position, Date value, TemporalType temporalType) {
-        q().setParameter(position, value, temporalType);
+        if (null != q) {
+            q.setParameter(position, value, temporalType);
+        }
+        dateParams.put(position, $.T2(value, temporalType));
         return this;
     }
 
@@ -338,7 +350,27 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     
     private Query q() {
         if (null == q) {
-            q = em.createQuery(svc.getSQL(type, entityClass, expression, columns).rawSql(svc.dialect()));
+            q = em.createQuery(svc.getSQL(type, entityClass, expression, columns).withOrderBy(orderByList).rawSql(svc.dialect()));
+            if (null != lockMode) {
+                q.setLockMode(lockMode);
+            }
+            if (null != flushMode) {
+                q.setFlushMode(flushMode);
+            }
+            for (Map.Entry<Integer, Object> entry : params.entrySet()) {
+                q.setParameter(entry.getKey(), entry.getValue());
+            }
+            for (Map.Entry<Integer, $.T2<Calendar, TemporalType>> entry : calendarParams.entrySet()) {
+                $.T2<Calendar, TemporalType> t2 = entry.getValue();
+                q.setParameter(entry.getKey(), t2._1, t2._2);
+            }
+            for (Map.Entry<Integer, $.T2<Date, TemporalType>> entry : dateParams.entrySet()) {
+                $.T2<Date, TemporalType> t2 = entry.getValue();
+                q.setParameter(entry.getKey(), t2._1, t2._2);
+            }
+            for (Map.Entry<String, Object> entry : hints.entrySet()) {
+                q.setHint(entry.getKey(), entry.getValue());
+            }
         }
         return q;
     }

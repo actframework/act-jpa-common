@@ -85,8 +85,8 @@ public class OrderByElement implements SqlPart {
     }
 
     @Override
-    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId) {
-        builder.append(column);
+    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
+        builder.append(entityAliasPrefix).append(column);
         if (descending) {
             builder.append(" DESC");
         }

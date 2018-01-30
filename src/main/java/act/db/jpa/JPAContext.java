@@ -34,23 +34,28 @@ public class JPAContext extends DestroyableBase {
 
     private static final Logger LOGGER = JPAPlugin.LOGGER;
 
+    private static class TxScope {
+        boolean readOnly;
+
+        public TxScope(boolean readOnly) {
+            this.readOnly = readOnly;
+        }
+    }
+
     private static class Info {
         EntityManager em;
         EntityTransaction tx;
         SqlDialect dialect;
-        Info(JPAService svc, boolean noTx) {
-            em = svc.createEntityManager();
-            dialect = svc.dialect();
-            if (!noTx) {
-                tx = em.getTransaction();
-                tx.begin();
-            }
+        Info(JPAService svc) {
+            this.em = svc.createEntityManager();
+            this.dialect = svc.dialect();
         }
     }
 
     private boolean noTx;
     private boolean rollback;
     private Map<String, Info> data = new HashMap<>();
+    private TxScope txScope;
 
     private JPAContext() {
         super(true);
@@ -67,14 +72,7 @@ public class JPAContext extends DestroyableBase {
     @Override
     protected void releaseResources() {
         for (Info info : data.values()) {
-            EntityTransaction tx = info.tx;
-            if (null != tx && tx.isActive()) {
-                if (rollback || tx.getRollbackOnly()) {
-                    tx.rollback();
-                } else {
-                    tx.commit();
-                }
-            }
+            E.illegalStateIf(null != info.tx, "transaction found unclosed");
             EntityManager em = info.em;
             if (null != em && em.isOpen()) {
                 em.close();
@@ -93,10 +91,47 @@ public class JPAContext extends DestroyableBase {
     private Info ensureInfo(JPAService jpa) {
         Info info = data.get(jpa.id());
         if (null == info) {
-            info = new Info(jpa, noTx);
+            info = new Info(jpa);
             data.put(jpa.id(), info);
         }
+        ensureTx(info);
         return info;
+    }
+
+    private void ensureTx(Info info) {
+        if (_withinTxScope() && null == info.tx) {
+            info.tx = info.em.getTransaction();
+            info.tx.begin();
+        }
+    }
+
+    private void _enterTxScope(boolean readOnly) {
+        if (!noTx) {
+            E.illegalStateIf(_withinTxScope(), "Nested transaction not supported");
+            txScope = new TxScope(readOnly);
+        }
+    }
+
+    private boolean _withinTxScope() {
+        return null != txScope;
+    }
+
+    private void _exitTxScope(boolean rollback) {
+        if (!noTx) {
+            E.illegalStateIfNot(_withinTxScope(), "No transaction found");
+            boolean readOnly = txScope.readOnly;
+            for (Info info : data.values()) {
+                EntityTransaction tx = info.tx;
+                if (null != tx && tx.isActive()) {
+                    if (readOnly || rollback || tx.getRollbackOnly()) {
+                        tx.rollback();
+                    } else {
+                        tx.commit();
+                    }
+                }
+                info.tx = null;
+            }
+        }
     }
 
     private static final ThreadLocal<JPAContext> cur_ = new ThreadLocal<>();
@@ -111,6 +146,16 @@ public class JPAContext extends DestroyableBase {
 
     public static SqlDialect dialect(JPAService jpa) {
         return ensureContext()._dialect(jpa);
+    }
+
+    public static void enterTxScope(boolean readOnly) {
+        JPAContext ctx = ensureContext();
+        ctx._enterTxScope(readOnly);
+    }
+
+    public static void exitTxScope(boolean rollback) {
+        JPAContext ctx = ensureContext();
+        ctx._exitTxScope(rollback);
     }
 
     public static void init() {

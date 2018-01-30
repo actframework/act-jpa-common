@@ -22,9 +22,15 @@ package act.db.jpa;
 
 import act.app.ActionContext;
 import act.app.App;
+import act.app.event.SysEvent;
+import act.app.event.SysEventId;
 import act.db.DbPlugin;
 import act.db.jpa.sql.Operator;
+import act.db.sql.tx.TxError;
+import act.db.sql.tx.TxStart;
+import act.db.sql.tx.TxStop;
 import act.event.ActEventListenerBase;
+import act.event.SysEventListenerBase;
 import act.handler.builtin.controller.ActionHandlerInvoker;
 import act.handler.builtin.controller.ExceptionInterceptor;
 import act.handler.builtin.controller.RequestHandlerProxy;
@@ -59,7 +65,7 @@ public abstract class JPAPlugin extends DbPlugin {
     }
 
     @Override
-    protected void applyTo(App app) {
+    protected void applyTo(final App app) {
         app.eventBus().bind(ReflectedHandlerInvokerInit.class, new ActEventListenerBase<ReflectedHandlerInvokerInit>() {
             @Override
             public void on(ReflectedHandlerInvokerInit event) {
@@ -91,12 +97,28 @@ public abstract class JPAPlugin extends DbPlugin {
             public void on(EventObject event) {
                 JPAContext.init();
             }
-        }).bind(BeforeResultCommit.class, new ActEventListenerBase<BeforeResultCommit>() {
+        }).bind(SysEventId.DB_SVC_LOADED, new SysEventListenerBase<SysEvent>() {
             @Override
-            public void on(BeforeResultCommit event) throws Exception {
-                JPAContext.close();
+            public void on(SysEvent event) {
+                new NamedQueryExplorer().explore(app);
             }
-        });
+        }).bind(TxStart.class, new ActEventListenerBase<TxStart>() {
+            @Override
+            public void on(TxStart eventObject) {
+                JPAContext.enterTxScope(eventObject.source().readOnly());
+            }
+        }).bind(TxStop.class, new ActEventListenerBase() {
+            @Override
+            public void on(EventObject eventObject) throws Exception {
+                JPAContext.exitTxScope(false);
+            }
+        }).bind(TxError.class, new ActEventListenerBase() {
+            @Override
+            public void on(EventObject eventObject) throws Exception {
+                JPAContext.exitTxScope(true);
+            }
+        })
+        ;
         RequestHandlerProxy.registerGlobalInterceptor(new ExceptionInterceptor() {
             @Override
             protected Result internalHandle(Exception e, ActionContext actionContext) {

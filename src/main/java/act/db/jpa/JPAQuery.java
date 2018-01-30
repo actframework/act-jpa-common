@@ -350,7 +350,12 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     
     private Query q() {
         if (null == q) {
-            q = em.createQuery(svc.getSQL(type, entityClass, expression, columns).withOrderBy(orderByList).rawSql(svc.dialect()));
+            NamedQuery nq = svc.namedQuery(expression);
+            if (null != nq) {
+                q = em.createNamedQuery(expression);
+            } else {
+                q = em.createQuery(svc.getSQL(type, entityClass, expression, columns).withOrderBy(orderByList).rawSql(svc.dialect()));
+            }
             if (null != lockMode) {
                 q.setLockMode(lockMode);
             }

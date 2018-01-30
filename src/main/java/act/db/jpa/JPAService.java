@@ -39,15 +39,13 @@ import org.osgl.util.E;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import javax.persistence.Entity;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Id;
+import javax.persistence.*;
 import javax.persistence.spi.PersistenceProvider;
 import javax.persistence.spi.PersistenceUnitInfo;
 import javax.sql.DataSource;
@@ -57,6 +55,8 @@ public abstract class JPAService extends SqlDbService {
     protected EntityMetaInfoRepo entityMetaInfoRepo;
     // map sql expression to SQL instance
     protected ConcurrentMap<SQLKey, SQL> sqlCache = new ConcurrentHashMap<>();
+
+    private Map<String, NamedQuery> namedQueries = new HashMap<>();
 
     EntityManagerFactory emFactory;
 
@@ -188,6 +188,14 @@ public abstract class JPAService extends SqlDbService {
 
     protected List<Class> entityClasses() {
         return C.list(entityMetaInfoRepo.entityClasses());
+    }
+
+    protected void registerNamedQuery(NamedQuery nq) {
+        namedQueries.put(nq.name(), nq);
+    }
+
+    protected NamedQuery namedQuery(String name) {
+        return namedQueries.get(name);
     }
 
     String lastModifiedColumn(Class<?> modelClass) {

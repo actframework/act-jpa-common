@@ -131,6 +131,7 @@ public class JPAContext extends DestroyableBase {
                 }
                 info.tx = null;
             }
+            this.txScope = null;
         }
     }
 

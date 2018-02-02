@@ -56,6 +56,7 @@ public class JPAContext extends DestroyableBase {
     private boolean rollback;
     private Map<String, Info> data = new HashMap<>();
     private TxScope txScope;
+    private boolean releaseOnExitTxScope;
 
     private JPAContext() {
         super(true);
@@ -150,13 +151,17 @@ public class JPAContext extends DestroyableBase {
     }
 
     public static void enterTxScope(boolean readOnly) {
-        JPAContext ctx = ensureContext();
+        JPAContext ctx = ensureContext(true);
         ctx._enterTxScope(readOnly);
     }
 
     public static void exitTxScope(boolean rollback) {
         JPAContext ctx = ensureContext();
         ctx._exitTxScope(rollback);
+        if (ctx.releaseOnExitTxScope) {
+            ctx.destroy();
+            cur_.remove();
+        }
     }
 
     public static void init() {
@@ -185,8 +190,17 @@ public class JPAContext extends DestroyableBase {
     }
 
     private static JPAContext ensureContext() {
+        return ensureContext(false);
+    }
+
+    private static JPAContext ensureContext(boolean createIfNotAvailable) {
         JPAContext ctx = cur_.get();
-        E.illegalStateIf(null == ctx, "JPAContext is not ready");
+        if (null == ctx) {
+            E.illegalStateIf( !createIfNotAvailable, "JPAContext is not ready");
+            ctx = new JPAContext();
+            ctx.releaseOnExitTxScope = true;
+            cur_.set(ctx);
+        }
         return ctx;
     }
 

@@ -165,8 +165,7 @@ public class SQL {
     public static class Parser {
         public static SQL parse(Type type, String entityName, String expression, String... columns) {
             if (S.isBlank(expression)) {
-                String entityAlias = SqlPart.Util.entityAlias(entityName);
-                return new SQL(S.fmt("SELECT %s FROM %s %s", entityAlias, entityName, entityAlias));
+                return type.startParsing(entityName).toSQL();
             }
             String lowerCase = expression.trim().toLowerCase();
             if (lowerCase.startsWith("select ") || lowerCase.startsWith("update ") || lowerCase.startsWith("delete ") || lowerCase.startsWith("from ")) {

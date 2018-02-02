@@ -126,6 +126,11 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     }
 
     @Override
+    public long count() {
+        return q(COUNT).count();
+    }
+
+    @Override
     public MODEL_TYPE save(MODEL_TYPE entity) {
         EntityManager em = em();
         if (!em.contains(entity)) {

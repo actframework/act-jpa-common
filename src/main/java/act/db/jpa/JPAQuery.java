@@ -148,6 +148,9 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
 
     @Override
     public long count() {
+        if (type != SQL.Type.COUNT) {
+            return asCount().count();
+        }
         Number n = (Number) q().getSingleResult();
         return n.longValue();
     }

@@ -72,6 +72,6 @@ public class SQLParserTest extends TestBase {
     }
 
     private void eq(String expected) {
-        eq(expected, target.rawSql(DefaultSqlDialect.INSTANCE));
+        eq(expected, target.rawSql(DefaultSqlDialect.INSTANCE).trim());
     }
 }

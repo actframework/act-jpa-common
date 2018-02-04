@@ -35,7 +35,10 @@ import act.handler.builtin.controller.ActionHandlerInvoker;
 import act.handler.builtin.controller.ExceptionInterceptor;
 import act.handler.builtin.controller.RequestHandlerProxy;
 import act.handler.builtin.controller.impl.ReflectedHandlerInvoker;
-import act.handler.event.*;
+import act.handler.event.PostHandle;
+import act.handler.event.PreHandle;
+import act.handler.event.ReflectedHandlerInvokerInit;
+import act.handler.event.ReflectedHandlerInvokerInvoke;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.mvc.result.Result;
@@ -43,6 +46,7 @@ import osgl.version.Version;
 import osgl.version.Versioned;
 
 import java.util.EventObject;
+import javax.persistence.EntityManager;
 
 // TODO - support JTA Transactional
 @Versioned
@@ -117,8 +121,15 @@ public abstract class JPAPlugin extends DbPlugin {
             public void on(EventObject eventObject) throws Exception {
                 JPAContext.exitTxScope(true);
             }
-        })
-        ;
+        });
+        app.jobManager().on(SysEventId.PRE_START, new Runnable() {
+            @Override
+            public void run() {
+                EntityManagerProvider emp = app.getInstance(EntityManagerProvider.class);
+                app.injector().registerNamedProvider(EntityManager.class, emp);
+                app.injector().registerProvider(EntityManager.class, emp);
+            }
+        });
         RequestHandlerProxy.registerGlobalInterceptor(new ExceptionInterceptor() {
             @Override
             protected Result internalHandle(Exception e, ActionContext actionContext) {

@@ -186,10 +186,6 @@ public abstract class JPAService extends SqlDbService {
         return properties;
     }
 
-    protected List<Class> entityClasses() {
-        return C.list(entityMetaInfoRepo.entityClasses());
-    }
-
     protected void registerNamedQuery(NamedQuery nq) {
         namedQueries.put(nq.name(), nq);
     }

@@ -26,6 +26,7 @@ import act.app.event.SysEvent;
 import act.app.event.SysEventId;
 import act.db.DbPlugin;
 import act.db.jpa.sql.Operator;
+import act.db.jpa.util.TimestampAuditor;
 import act.db.sql.tx.TxError;
 import act.db.sql.tx.TxStart;
 import act.db.sql.tx.TxStop;
@@ -128,6 +129,7 @@ public abstract class JPAPlugin extends DbPlugin {
                 EntityManagerProvider emp = app.getInstance(EntityManagerProvider.class);
                 app.injector().registerNamedProvider(EntityManager.class, emp);
                 app.injector().registerProvider(EntityManager.class, emp);
+                app.getInstance(TimestampAuditor.class);
             }
         });
         RequestHandlerProxy.registerGlobalInterceptor(new ExceptionInterceptor() {
@@ -136,12 +138,10 @@ public abstract class JPAPlugin extends DbPlugin {
                 JPAContext.setRollback();
                 return null;
             }
-
             @Override
             public void accept(ActionHandlerInvoker.Visitor visitor) {
 
             }
-
             @Override
             public boolean sessionFree() {
                 return true;

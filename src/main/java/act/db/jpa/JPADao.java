@@ -133,29 +133,73 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     @Override
     public MODEL_TYPE save(MODEL_TYPE entity) {
         EntityManager em = em();
+        if (em.isJoinedToTransaction()) {
+            _save(entity, em);
+        } else {
+            JPAContext.beginTx(em, jpa());
+            try {
+                _save(entity, em);
+                JPAContext.exitTxScope(false);
+            } catch (RuntimeException e) {
+                JPAContext.exitTxScope(true);
+                throw e;
+            }
+
+        }
+        return entity;
+    }
+
+    private void _save(MODEL_TYPE entity, EntityManager em) {
         if (!em.contains(entity)) {
             em.persist(entity);
         } else {
             em.merge(entity);
         }
-        return entity;
     }
 
     @Override
     public void save(MODEL_TYPE entity, String fieldList, Object... values) {
         values = $.concat(values, getId(entity));
         JPAQuery<MODEL_TYPE> q = createUpdateQuery(fieldList, idColumn, values);
-        q.executeUpdate();
-        em().flush();
+        EntityManager em = em();
+        if (em.isJoinedToTransaction()) {
+            q.executeUpdate();
+            em().flush();
+        } else {
+            JPAContext.beginTx(em, jpa());
+            try {
+                q.executeUpdate();
+                JPAContext.exitTxScope(false);
+            } catch (RuntimeException e) {
+                JPAContext.exitTxScope(true);
+                throw e;
+            }
+        }
     }
 
     @Override
     public List<MODEL_TYPE> save(Iterable<MODEL_TYPE> entities) {
         List<MODEL_TYPE> list = new ArrayList<>();
-        int count = 0;
         EntityManager em = em();
+        if (em.isJoinedToTransaction()) {
+            _save(entities, list, em);
+        } else {
+            JPAContext.beginTx(em, jpa());
+            try {
+                _save(entities, list, em);
+                JPAContext.exitTxScope(false);
+            } catch (RuntimeException e) {
+                JPAContext.exitTxScope(true);
+                throw e;
+            }
+        }
+        return list;
+    }
+
+    private void _save(Iterable<MODEL_TYPE> entities, List<MODEL_TYPE> list, EntityManager em) {
+        int count = 0;
         for (MODEL_TYPE entity : entities) {
-            em.persist(entity);
+            _save(entity, em);
             // TODO: make `20` configurable
             if (++count % 20 == 0) {
                 em.flush();
@@ -163,21 +207,43 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
             }
             list.add(entity);
         }
-        return list;
     }
 
     @Override
     public void delete(MODEL_TYPE entity) {
         EntityManager em = em();
-        em.remove(entity);
-        em.flush();
+        if (em.isJoinedToTransaction()) {
+            em.remove(entity);
+            em.flush();
+        } else {
+            JPAContext.beginTx(em, jpa());
+            try {
+                em.remove(entity);
+                JPAContext.exitTxScope(false);
+            } catch (RuntimeException e) {
+                JPAContext.exitTxScope(true);
+                throw e;
+            }
+        }
     }
 
     @Override
     public void delete(JPAQuery<MODEL_TYPE> query) {
         query = query.asDelete();
-        query.executeUpdate();
-        em().flush();
+        EntityManager em = em();
+        if (em.isJoinedToTransaction()) {
+            query.executeUpdate();
+            em.flush();
+        } else {
+            JPAContext.beginTx(em, jpa());
+            try {
+                query.executeUpdate();
+                JPAContext.exitTxScope(false);
+            } catch (RuntimeException e) {
+                JPAContext.exitTxScope(true);
+                throw e;
+            }
+        }
     }
 
     @Override
@@ -270,7 +336,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     }
 
     void setJPAService(JPAService jpa) {
-        Class<?> modelType = modelType();
+        Class<MODEL_TYPE> modelType = modelType();
         this.entityName = jpa.entityName(modelType);
         this.createdColumn = jpa.createdColumn(modelType);
         this.lastModifiedColumn = jpa.lastModifiedColumn(modelType);
@@ -280,10 +346,17 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         this._jpa = jpa;
     }
 
+    private void apply($.Visitor<MODEL_TYPE> visitor, MODEL_TYPE entity) {
+        if (null != visitor) {
+            visitor.apply(entity);
+        }
+    }
+
     private EntityManager em() {
         return JPAContext.em(jpa());
     }
     private EntityManager em(JPAService jpa) {
         return JPAContext.em(jpa);
     }
+
 }

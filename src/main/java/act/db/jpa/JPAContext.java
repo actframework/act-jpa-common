@@ -155,6 +155,14 @@ public class JPAContext extends DestroyableBase {
         ctx._enterTxScope(readOnly);
     }
 
+    public static void beginTx(EntityManager em, JPAService jpa) {
+        JPAContext ctx = ensureContext(true);
+        ctx._enterTxScope(false);
+        if (!em.isJoinedToTransaction()) {
+            ctx.ensureInfo(jpa);
+        }
+    }
+
     public static void exitTxScope(boolean rollback) {
         JPAContext ctx = ensureContext();
         ctx._exitTxScope(rollback);

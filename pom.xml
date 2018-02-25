@@ -20,7 +20,7 @@
 
   <artifactId>act-jpa-common</artifactId>
   <packaging>jar</packaging>
-  <version>1.1.0</version>
+  <version>1.1.1-SNAPSHOT</version>
 
   <name>ACT JPA Common Module</name>
   <description>Provides common JPA utilities for all JPA based plug for Actframework</description>

@@ -30,7 +30,7 @@
   <parent>
     <groupId>org.actframework</groupId>
     <artifactId>parent</artifactId>
-    <version>1.7.0</version>
+    <version>1.7.3</version>
   </parent>
 
   <properties>
@@ -46,11 +46,6 @@
   </scm>
 
   <dependencies>
-    <dependency>
-      <groupId>org.actframework</groupId>
-      <artifactId>act</artifactId>
-      <version>1.7.2-SNAPSHOT</version>
-    </dependency>
     <dependency>
       <groupId>org.actframework</groupId>
       <artifactId>act-sql-common</artifactId>

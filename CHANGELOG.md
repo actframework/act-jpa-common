@@ -1,5 +1,9 @@
 # act-jpa-common CHANGE LOG
 
+1.2.0
+* timestamp audit not working with base class #3
+* update to act-1.8
+
 1.1.0
 * Request to support timestamp audit #2
 * data not commit to database unless `@Transactional` annotation is used #1

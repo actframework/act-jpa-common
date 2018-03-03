@@ -22,6 +22,7 @@ package act.db.jpa.util;
 
 import act.Act;
 import act.app.App;
+import act.app.event.SysEventId;
 import act.db.DbManager;
 import act.db.DbService;
 import act.db.TimestampGenerator;
@@ -29,6 +30,8 @@ import act.db.meta.EntityClassMetaInfo;
 import act.db.meta.EntityFieldMetaInfo;
 import act.db.meta.EntityMetaInfoRepo;
 import act.db.meta.MasterEntityMetaInfoRepo;
+import act.util.ClassInfoRepository;
+import act.util.ClassNode;
 import act.util.Stateless;
 import org.osgl.$;
 import org.osgl.Osgl;
@@ -36,7 +39,9 @@ import org.osgl.util.E;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -48,6 +53,16 @@ public class TimestampAuditor {
 
     public TimestampAuditor() {
         buildLookups();
+        final App app = Act.app();
+        final TimestampAuditor me = this;
+        // register singleton as the first TimestampAuditor could be initialized
+        // by ORM lib e.g Hibernate
+        app.jobManager().on(SysEventId.SINGLETON_PROVISIONED, new Runnable() {
+            @Override
+            public void run() {
+                app.registerSingleton(me);
+            }
+        }, true);
     }
 
     @PrePersist
@@ -64,23 +79,64 @@ public class TimestampAuditor {
     }
 
     private void buildLookups() {
-        App app = Act.app();
+        final App app = Act.app();
         MasterEntityMetaInfoRepo masterRepo = app.entityMetaInfoRepo();
         final DbManager dbManager = Act.dbManager();
+        ClassInfoRepository classInfoRepository = app.classLoader().classInfoRepository();
         for (DbService db : app.dbServiceManager().registeredServices()) {
-            EntityMetaInfoRepo repo = masterRepo.forDb(db.id());
+            final EntityMetaInfoRepo repo = masterRepo.forDb(db.id());
+            final Set<Class> entityClasses = new HashSet<>(repo.entityClasses());
             for (Class entityClass : repo.entityClasses()) {
-                EntityClassMetaInfo classInfo = repo.classMetaInfo(entityClass);
+                if (!entityClasses.contains(entityClass)) {
+                    continue;
+                }
+                final EntityClassMetaInfo classInfo = repo.classMetaInfo(entityClass);
                 EntityFieldMetaInfo fieldInfo = classInfo.createdAtField();
                 if (null != fieldInfo) {
                     final Field field = $.notNull($.fieldOf(entityClass, fieldInfo.fieldName()));
                     field.setAccessible(true);
-                    createdAtLookup.put(entityClass, new TimestampFieldVisitor(field, dbManager));
+                    final TimestampFieldVisitor timestampFieldVisitor = new TimestampFieldVisitor(field, dbManager);
+                    createdAtLookup.put(entityClass, timestampFieldVisitor);
+                    final ClassNode node = classInfoRepository.node(entityClass.getName());
+                    node.visitSubTree(new $.Visitor<ClassNode>() {
+                        @Override
+                        public void visit(ClassNode classNode) throws Osgl.Break {
+                            String className = classNode.name();
+                            EntityClassMetaInfo classInfo = repo.classMetaInfo(className);
+                            if (null == classInfo) {
+                                return;
+                            }
+                            EntityFieldMetaInfo fieldInfo = classInfo.createdAtField();
+                            if (null == fieldInfo) {
+                                Class entityClass = app.classForName(className);
+                                createdAtLookup.put(app.classForName(className), timestampFieldVisitor);
+                                entityClasses.remove(entityClass);
+                            }
+                        }
+                    }, true, true);
                 }
                 fieldInfo = classInfo.lastModifiedAtField();
                 if (null != fieldInfo) {
                     Field field = $.notNull($.fieldOf(entityClass, fieldInfo.fieldName()));
-                    lastModifiedAtLookup.put(entityClass, new TimestampFieldVisitor(field, dbManager));
+                    final TimestampFieldVisitor timestampFieldVisitor = new TimestampFieldVisitor(field, dbManager);
+                    lastModifiedAtLookup.put(entityClass, timestampFieldVisitor);
+                    final ClassNode node = classInfoRepository.node(entityClass.getName());
+                    node.visitSubTree(new $.Visitor<ClassNode>() {
+                        @Override
+                        public void visit(ClassNode classNode) throws Osgl.Break {
+                            String className = classNode.name();
+                            EntityClassMetaInfo classInfo = repo.classMetaInfo(className);
+                            if (null == classInfo) {
+                                return;
+                            }
+                            EntityFieldMetaInfo fieldInfo = classInfo.createdAtField();
+                            if (null == fieldInfo) {
+                                Class entityClass = app.classForName(className);
+                                lastModifiedAtLookup.put(app.classForName(className), timestampFieldVisitor);
+                                entityClasses.remove(entityClass);
+                            }
+                        }
+                    }, true, true);
                 }
             }
         }

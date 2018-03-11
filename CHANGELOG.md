@@ -1,5 +1,9 @@
 # act-jpa-common CHANGE LOG
 
+1.2.1 - 11/Mar/2018
+* update to act-1.8.1
+* update to act-sql-common-1.3.1
+
 1.2.0
 * timestamp audit not working with base class #3
 * update to act-1.8

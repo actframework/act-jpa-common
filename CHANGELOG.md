@@ -1,8 +1,8 @@
 # act-jpa-common CHANGE LOG
 
-1.2.4
-* update act to 1.8.8-RC4
-* update act-sql-common to 1.3.4-SNAPSHOT
+1.2.4 - 19/May/2018
+* update act to 1.8.8-RC5
+* update act-sql-common to 1.3.4
 
 1.2.3 - 02/Apr/2018
 * update act to 1.8.5

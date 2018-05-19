@@ -142,6 +142,12 @@ public abstract class JPAPlugin extends DbPlugin {
             public void accept(ActionHandlerInvoker.Visitor visitor) {
 
             }
+
+            @Override
+            public boolean skipEvents() {
+                return true;
+            }
+
             @Override
             public boolean sessionFree() {
                 return true;

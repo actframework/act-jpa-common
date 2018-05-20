@@ -1,5 +1,9 @@
 # act-jpa-common CHANGE LOG
 
+1.3.0 - 20/May/2018
+* export entity manager in JPADao #4
+* update act to 1.8.8-RC7
+
 1.2.4 - 19/May/2018
 * update act to 1.8.8-RC5
 * update act-sql-common to 1.3.4

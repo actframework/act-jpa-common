@@ -335,6 +335,10 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         return q(COUNT, expression, values);
     }
 
+    public EntityManager em() {
+        return JPAContext.em(jpa());
+    }
+
     void setJPAService(JPAService jpa) {
         Class<MODEL_TYPE> modelType = modelType();
         this.entityName = jpa.entityName(modelType);
@@ -352,9 +356,6 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         }
     }
 
-    private EntityManager em() {
-        return JPAContext.em(jpa());
-    }
     private EntityManager em(JPAService jpa) {
         return JPAContext.em(jpa);
     }

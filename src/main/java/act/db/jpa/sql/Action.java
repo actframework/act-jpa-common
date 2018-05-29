@@ -47,7 +47,7 @@ public abstract class Action implements SqlPart {
 
         public Select(String entityName, List<String> columns) {
             super(entityName);
-            this.columns = $.notNull(columns);
+            this.columns = $.requireNotNull(columns);
         }
 
         public Select(String entityName, String... columns) {
@@ -98,7 +98,7 @@ public abstract class Action implements SqlPart {
         public Update(String entityName, List<String> columns) {
             super(entityName);
             E.illegalArgumentIf(columns.isEmpty(), "columns expected for Update action");
-            this.columns = $.notNull(columns);
+            this.columns = $.requireNotNull(columns);
         }
 
         public Update(String entityName, String... columns) {

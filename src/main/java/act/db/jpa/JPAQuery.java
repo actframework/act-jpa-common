@@ -50,11 +50,11 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     private Map<Integer, $.T2<Date, TemporalType>> dateParams = new HashMap<>();
 
     public JPAQuery(JPAService svc, EntityManager em, Class entityClass, SQL.Type type, String expression, String... columns) {
-        this.svc = $.notNull(svc);
-        this.em = $.notNull(em);
-        this.entityClass = $.notNull(entityClass);
-        this.type = $.notNull(type);
-        this.expression = $.notNull(expression);
+        this.svc = $.requireNotNull(svc);
+        this.em = $.requireNotNull(em);
+        this.entityClass = $.requireNotNull(entityClass);
+        this.type = $.requireNotNull(type);
+        this.expression = $.requireNotNull(expression);
         this.columns = columns;
     }
 
@@ -318,7 +318,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
 
     @Override
     public Query setFlushMode(FlushModeType flushMode) {
-        this.flushMode = $.notNull(flushMode);
+        this.flushMode = $.requireNotNull(flushMode);
         if (null != q) {
             q.setFlushMode(flushMode);
         }
@@ -332,7 +332,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
 
     @Override
     public Query setLockMode(LockModeType lockMode) {
-        this.lockMode = $.notNull(lockMode);
+        this.lockMode = $.requireNotNull(lockMode);
         if (null != q) {
             q.setLockMode(lockMode);
         }

@@ -39,25 +39,25 @@ public class SQLParserTest extends TestBase {
     @Test
     public void testEmptyExpression() {
         parseSelect("");
-        eq("SELECT U FROM User U");
+        eq("SELECT User FROM User User");
     }
 
     @Test
     public void testSingleField() {
         parseSelect("name");
-        eq("SELECT U FROM User U  WHERE U.name = ?1");
+        eq("SELECT User FROM User User  WHERE User.name = ?1");
     }
 
     @Test
     public void testMultipleFields() {
         parseSelect("name,age");
-        eq("SELECT U FROM User U  WHERE U.name = ?1 AND U.age = ?2");
+        eq("SELECT User FROM User User  WHERE User.name = ?1 AND User.age = ?2");
     }
 
     @Test
     public void testMultipleFieldsWithOp() {
         parseSelect("name like,age between,score <=,date gt");
-        eq("SELECT U FROM User U  WHERE U.name LIKE ?1 AND U.age < ?2 AND U.age > ?3 AND U.score <= ?4 AND U.date > ?5");
+        eq("SELECT User FROM User User  WHERE User.name LIKE ?1 AND User.age < ?2 AND User.age > ?3 AND User.score <= ?4 AND User.date > ?5");
     }
 
     @Test

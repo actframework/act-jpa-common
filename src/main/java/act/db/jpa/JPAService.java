@@ -60,21 +60,26 @@ public abstract class JPAService extends SqlDbService {
 
     EntityManagerFactory emFactory;
 
+    EntityManagerFactory emFactoryReadOnly;
+
     public JPAService(final String dbId, final App app, final Map<String, String> config) {
         super(dbId, app, config);
     }
 
     @Override
-    protected void dataSourceProvided(DataSource dataSource, DataSourceConfig dataSourceConfig) {
-        super.dataSourceProvided(dataSource, dataSourceConfig);
+    protected void dataSourceProvided(DataSource dataSource, DataSourceConfig dataSourceConfig, boolean readonly) {
+        super.dataSourceProvided(dataSource, dataSourceConfig, readonly);
         String dbId = id();
         entityMetaInfoRepo = app().entityMetaInfoRepo().forDb(dbId);
-        this.emFactory = createEntityManagerFactory(dbId, dataSource);
-    }
-
-    @Override
-    protected DataSource createDataSource() {
-        throw E.unsupport();
+        EntityManagerFactory factory = createEntityManagerFactory(dbId, dataSource, readonly, dataSourceConfig);
+        if (readonly) {
+            this.emFactoryReadOnly = factory;
+        } else {
+            this.emFactory = factory;
+            if (null == this.emFactoryReadOnly) {
+                this.emFactoryReadOnly = factory;
+            }
+        }
     }
 
     @Override
@@ -117,6 +122,42 @@ public abstract class JPAService extends SqlDbService {
     // --- Implement SqlDialect
 
     // --- Eof Implement SqlDialect
+
+
+    @Override
+    protected void doStartTx(Object delegate, boolean readOnly) {
+        EntityManager em = $.cast(delegate);
+        em.getTransaction().begin();
+    }
+
+    @Override
+    protected void doRollbackTx(Object delegate, Throwable cause) {
+        EntityManager em = $.cast(delegate);
+        try {
+            if (!(cause instanceof RollbackException)) {
+                em.getTransaction().rollback();
+            }
+        } finally {
+            JPAContext.clear(this);
+        }
+    }
+
+    @Override
+    protected void doEndTxIfActive(Object delegate) {
+        EntityManager em = $.cast(delegate);
+        try {
+            if (em.isOpen() && em.isJoinedToTransaction()) {
+                EntityTransaction tx = em.getTransaction();
+                if (tx.getRollbackOnly()) {
+                    tx.rollback();
+                } else {
+                    tx.commit();
+                }
+            }
+        } finally {
+            JPAContext.clear(this);
+        }
+    }
 
     /**
      * Create an new Dao for given id type and model type.
@@ -180,9 +221,11 @@ public abstract class JPAService extends SqlDbService {
      * ```
      *
      * @param properties the properties contains common JPA configuration
+     * @param dataSourceConfig the {@link DataSourceConfig} instance, could be used by specific service to translate settings
+     * @param useExternalDataSource a flag indicate if external data source is available or not
      * @return the properties with specific service configurations added in.
      */
-    protected Properties processProperties(Properties properties) {
+    protected Properties processProperties(Properties properties, DataSourceConfig dataSourceConfig, boolean useExternalDataSource) {
         return properties;
     }
 
@@ -226,30 +269,37 @@ public abstract class JPAService extends SqlDbService {
         return DefaultSqlDialect.INSTANCE;
     }
 
-    EntityManager createEntityManager() {
-        return emFactory.createEntityManager();
+    EntityManager createEntityManager(boolean readOnly) {
+        return (readOnly ? emFactoryReadOnly : emFactory).createEntityManager();
     }
 
     private EntityClassMetaInfo classInfo(Class<?> modelClass) {
         return entityMetaInfoRepo.classMetaInfo(modelClass);
     }
 
-    private EntityManagerFactory createEntityManagerFactory(String dbName, DataSource dataSource) {
-        PersistenceUnitInfoImpl persistenceUnitInfo = persistenceUnitInfo(dbName);
-        persistenceUnitInfo.setNonJtaDataSource(dataSource);
+    private EntityManagerFactory createEntityManagerFactory(String dbName, DataSource dataSource, boolean readOnly, DataSourceConfig dataSourceConfig) {
+        PersistenceUnitInfoImpl persistenceUnitInfo = persistenceUnitInfo(dbName, readOnly, dataSourceConfig, dataSource);
         return createEntityManagerFactory(persistenceUnitInfo);
     }
 
-    private PersistenceUnitInfoImpl persistenceUnitInfo(String dbName) {
+    private PersistenceUnitInfoImpl persistenceUnitInfo(
+            String dbName,
+            boolean readOnly,
+            DataSourceConfig dataSourceConfig,
+            DataSource externalDataSource
+    ) {
         Properties properties = properties();
-        properties = processProperties(properties);
+        properties = processProperties(properties, dataSourceConfig, null != externalDataSource);
         List<Class> managedClasses = C.list(entityMetaInfoRepo.entityClasses());
+        if (readOnly) {
+            dbName = dbName + "-ro";
+        }
         return persistenceUnitInfo(
-                persistenceProviderClass().getName(),
-                dbName, managedClasses, mappingFiles(), properties);
+                persistenceProviderClass().getName(), dbName, managedClasses,
+                mappingFiles(), properties, externalDataSource);
     }
 
-    private Properties properties() {
+    protected Properties properties() {
         Properties properties = new Properties();
         properties.putAll(config.rawConf);
         properties.put("javax.persistence.transaction", "RESOURCE_LOCAL");
@@ -266,10 +316,15 @@ public abstract class JPAService extends SqlDbService {
             String persistenceUnitName,
             List<Class> managedClasses,
             List<String> mappingFileNames,
-            Properties properties
+            Properties properties,
+            DataSource externalDataSource
     ) {
-        return new PersistenceUnitInfoImpl(persistenceProviderClass,
+        PersistenceUnitInfoImpl retVal = new PersistenceUnitInfoImpl(persistenceProviderClass,
                 persistenceUnitName, managedClasses, mappingFileNames, properties, app().classLoader());
+        if (null != externalDataSource) {
+            retVal.setNonJtaDataSource(externalDataSource);
+        }
+        return retVal;
     }
 
     private void postDaoConstructor(JPADao dao) {

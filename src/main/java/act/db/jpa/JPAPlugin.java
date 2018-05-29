@@ -24,12 +24,9 @@ import act.app.ActionContext;
 import act.app.App;
 import act.app.event.SysEvent;
 import act.app.event.SysEventId;
-import act.db.DbPlugin;
 import act.db.jpa.sql.Operator;
 import act.db.jpa.util.TimestampAuditor;
-import act.db.sql.tx.TxError;
-import act.db.sql.tx.TxStart;
-import act.db.sql.tx.TxStop;
+import act.db.sql.SqlDbPlugin;
 import act.event.ActEventListenerBase;
 import act.event.SysEventListenerBase;
 import act.handler.builtin.controller.ActionHandlerInvoker;
@@ -51,11 +48,12 @@ import javax.persistence.EntityManager;
 
 // TODO - support JTA Transactional
 @Versioned
-public abstract class JPAPlugin extends DbPlugin {
+public abstract class JPAPlugin extends SqlDbPlugin {
 
     public static final Logger LOGGER = LogManager.get(JPAPlugin.class);
 
     public static final String ATTR_NO_TRANSACTION = "no-trans";
+    public static final String CONF_CACHE_ENABLED = "cache.enabled";
     public static final String CONF_DDL = "jpa.ddl";
     public static final String CONF_DDL_CREATE = "create";
     public static final String CONF_DDEL_CREATE_DROP = "create-drop";
@@ -71,6 +69,7 @@ public abstract class JPAPlugin extends DbPlugin {
 
     @Override
     protected void applyTo(final App app) {
+        super.applyTo(app);
         app.eventBus().bind(ReflectedHandlerInvokerInit.class, new ActEventListenerBase<ReflectedHandlerInvokerInit>() {
             @Override
             public void on(ReflectedHandlerInvokerInit event) {
@@ -107,21 +106,6 @@ public abstract class JPAPlugin extends DbPlugin {
             public void on(SysEvent event) {
                 new NamedQueryExplorer().explore(app);
             }
-        }).bind(TxStart.class, new ActEventListenerBase<TxStart>() {
-            @Override
-            public void on(TxStart eventObject) {
-                JPAContext.enterTxScope(eventObject.source().readOnly());
-            }
-        }).bind(TxStop.class, new ActEventListenerBase() {
-            @Override
-            public void on(EventObject eventObject) throws Exception {
-                JPAContext.exitTxScope(false);
-            }
-        }).bind(TxError.class, new ActEventListenerBase() {
-            @Override
-            public void on(EventObject eventObject) throws Exception {
-                JPAContext.exitTxScope(true);
-            }
         });
         app.jobManager().on(SysEventId.PRE_START, new Runnable() {
             @Override
@@ -130,6 +114,7 @@ public abstract class JPAPlugin extends DbPlugin {
                 app.injector().registerNamedProvider(EntityManager.class, emp);
                 app.injector().registerProvider(EntityManager.class, emp);
                 app.getInstance(TimestampAuditor.class);
+                JPAContext.reset();
             }
         });
         RequestHandlerProxy.registerGlobalInterceptor(new ExceptionInterceptor() {

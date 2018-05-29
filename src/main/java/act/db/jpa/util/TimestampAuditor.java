@@ -34,7 +34,6 @@ import act.util.ClassInfoRepository;
 import act.util.ClassNode;
 import act.util.Stateless;
 import org.osgl.$;
-import org.osgl.Osgl;
 import org.osgl.util.E;
 
 import java.lang.reflect.Field;
@@ -93,14 +92,14 @@ public class TimestampAuditor {
                 final EntityClassMetaInfo classInfo = repo.classMetaInfo(entityClass);
                 EntityFieldMetaInfo fieldInfo = classInfo.createdAtField();
                 if (null != fieldInfo) {
-                    final Field field = $.notNull($.fieldOf(entityClass, fieldInfo.fieldName()));
+                    final Field field = $.requireNotNull($.fieldOf(entityClass, fieldInfo.fieldName()));
                     field.setAccessible(true);
                     final TimestampFieldVisitor timestampFieldVisitor = new TimestampFieldVisitor(field, dbManager);
                     createdAtLookup.put(entityClass, timestampFieldVisitor);
                     final ClassNode node = classInfoRepository.node(entityClass.getName());
                     node.visitSubTree(new $.Visitor<ClassNode>() {
                         @Override
-                        public void visit(ClassNode classNode) throws Osgl.Break {
+                        public void visit(ClassNode classNode) throws $.Break {
                             String className = classNode.name();
                             EntityClassMetaInfo classInfo = repo.classMetaInfo(className);
                             if (null == classInfo) {
@@ -117,13 +116,13 @@ public class TimestampAuditor {
                 }
                 fieldInfo = classInfo.lastModifiedAtField();
                 if (null != fieldInfo) {
-                    Field field = $.notNull($.fieldOf(entityClass, fieldInfo.fieldName()));
+                    Field field = $.requireNotNull($.fieldOf(entityClass, fieldInfo.fieldName()));
                     final TimestampFieldVisitor timestampFieldVisitor = new TimestampFieldVisitor(field, dbManager);
                     lastModifiedAtLookup.put(entityClass, timestampFieldVisitor);
                     final ClassNode node = classInfoRepository.node(entityClass.getName());
                     node.visitSubTree(new $.Visitor<ClassNode>() {
                         @Override
-                        public void visit(ClassNode classNode) throws Osgl.Break {
+                        public void visit(ClassNode classNode) throws $.Break {
                             String className = classNode.name();
                             EntityClassMetaInfo classInfo = repo.classMetaInfo(className);
                             if (null == classInfo) {
@@ -158,7 +157,7 @@ public class TimestampAuditor {
         }
 
         @Override
-        public void visit(Object entity) throws Osgl.Break {
+        public void visit(Object entity) throws $.Break {
             try {
                 field.set(entity, tsGen.now());
             } catch (IllegalAccessException e) {

@@ -33,14 +33,14 @@ public class GroupWhereComponent extends WhereComponentBase {
 
     public GroupWhereComponent(LogicOperator operator, List<WhereComponent> subComponents) {
         E.illegalArgumentIf(subComponents.isEmpty(), "sub components cannot be empty");
-        this.subComponents = $.notNull(subComponents);
-        this.op = $.notNull(operator);
+        this.subComponents = $.requireNotNull(subComponents);
+        this.op = $.requireNotNull(operator);
     }
 
     public GroupWhereComponent(LogicOperator operator, WhereComponent... subComponents) {
         E.illegalArgumentIf(0 == subComponents.length, "sub components cannot be empty");
         this.subComponents = C.listOf(subComponents);
-        this.op = $.notNull(operator);
+        this.op = $.requireNotNull(operator);
     }
 
     @Override
@@ -54,14 +54,4 @@ public class GroupWhereComponent extends WhereComponentBase {
         }
     }
 
-    private void printSubComponent(SqlDialect dialect, WhereComponent subComponent, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
-        boolean subIsGroup = subComponent instanceof GroupWhereComponent;
-        if (subIsGroup) {
-            builder.append("(");
-        }
-        subComponent.print(dialect, builder, paramId, entityAliasPrefix);
-        if (subIsGroup) {
-            builder.append(")");
-        }
-    }
 }

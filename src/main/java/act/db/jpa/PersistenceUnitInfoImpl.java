@@ -73,7 +73,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
         this.managedClasses = managedClasses;
         this.mappingFileNames = mappingFileNames;
         this.properties = properties;
-        this.classLoader = $.notNull(classLoader);
+        this.classLoader = $.requireNotNull(classLoader);
     }
 
     @Override

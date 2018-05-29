@@ -1,4 +1,4 @@
-package act.db.jpa.sql;
+package act.db.jpa.util;
 
 /*-
  * #%L
@@ -20,28 +20,27 @@ package act.db.jpa.sql;
  * #L%
  */
 
-import org.osgl.$;
+import act.db.sql.DataSourceConfig;
+import act.db.sql.DataSourceProvider;
+import act.db.sql.monitor.DataSourceStatus;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Map;
+import javax.sql.DataSource;
 
-public class NotWhereExpression extends WhereComponentBase {
+public class JPABuiltInDataSourceProvider extends DataSourceProvider {
 
-    private WhereComponent target;
-
-    public NotWhereExpression(WhereComponent target) {
-        this.target = $.requireNotNull(target);
+    @Override
+    public DataSource createDataSource(DataSourceConfig conf) {
+        return null;
     }
 
     @Override
-    public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
-        builder.append("NOT (");
-        target.print(dialect, builder, paramId, entityAliasPrefix);
-        builder.append(")");
+    public Map<String, String> confKeyMapping() {
+        return null;
     }
 
     @Override
-    public WhereComponent not() {
-        return target;
+    public DataSourceStatus getStatus(DataSource ds) {
+        return null;
     }
-
 }

@@ -21,21 +21,31 @@ package act.db.jpa.sql;
  */
 
 import org.osgl.$;
+import org.osgl.util.S;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimpleWhereExpression extends WhereComponentBase {
 
+    private String columnPrefix;
     private String column;
     private Operator operator;
 
+    public SimpleWhereExpression(String columnPrefix, String column, Operator operator) {
+        this(column, operator);
+        this.columnPrefix = S.ensure(S.requireNotBlank(columnPrefix).trim()).endWith(".");
+    }
+
     public SimpleWhereExpression(String column, Operator operator) {
-        this.column = $.notNull(column);
-        this.operator = $.notNull(operator);
+        this.column = $.requireNotNull(column);
+        this.operator = $.requireNotNull(operator);
     }
 
     @Override
     public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger ordinalId, String entityAliasPrefix) {
+        if (null != columnPrefix) {
+            entityAliasPrefix = columnPrefix;
+        }
         operator.print(dialect, builder, column, ordinalId, entityAliasPrefix);
     }
 

@@ -24,6 +24,8 @@ import act.Act;
 import act.app.DbServiceManager;
 import act.util.Stateless;
 import org.osgl.inject.NamedProvider;
+import org.osgl.logging.LogManager;
+import org.osgl.logging.Logger;
 
 import javax.inject.Provider;
 import javax.persistence.EntityManager;
@@ -31,6 +33,8 @@ import javax.persistence.EntityManager;
 @Stateless
 public class EntityManagerProvider implements
         NamedProvider<EntityManager>, Provider<EntityManager> {
+
+    private static final Logger LOGGER = LogManager.get(EntityManagerProvider.class);
 
     private static final String DEFAULT = DbServiceManager.DEFAULT;
 
@@ -45,7 +49,14 @@ public class EntityManagerProvider implements
     }
 
     private JPAService svc(String s) {
-        return Act.app().dbServiceManager().dbService(s);
+        JPAService svc = Act.app().dbServiceManager().dbService(s);
+        if (null == svc) {
+            LOGGER.warn("service not found: %s; Will try load default service.");
+            if (!DEFAULT.equalsIgnoreCase(s)) {
+                return svc(DEFAULT);
+            }
+        }
+        return svc;
     }
 
 }

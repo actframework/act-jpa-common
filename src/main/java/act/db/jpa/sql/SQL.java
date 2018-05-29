@@ -9,9 +9,9 @@ package act.db.jpa.sql;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -43,11 +43,21 @@ public class SQL {
             protected Builder startParsing(String entity, String... columns) {
                 return new SQL.Builder().select(entity, columns);
             }
+
+            @Override
+            public boolean readOnly() {
+                return true;
+            }
         },
         COUNT() {
             @Override
             protected Builder startParsing(String entity, String... columns) {
                 return new SQL.Builder().count(entity);
+            }
+
+            @Override
+            public boolean readOnly() {
+                return true;
             }
         },
         UPDATE() {
@@ -55,14 +65,25 @@ public class SQL {
             protected Builder startParsing(String entity, String... columns) {
                 return new SQL.Builder().update(entity, columns);
             }
+
+            @Override
+            public boolean readOnly() {
+                return false;
+            }
         },
         DELETE() {
             @Override
             protected Builder startParsing(String entity, String... columns) {
                 return new SQL.Builder().delete(entity);
             }
+
+            @Override
+            public boolean readOnly() {
+                return false;
+            }
         };
         protected abstract Builder startParsing(String entity, String... columns);
+        public abstract boolean readOnly();
     }
 
     private String entityName;
@@ -70,22 +91,24 @@ public class SQL {
     private Action action;
     private WhereComponent where;
     private OrderByList orderBy;
+    private List<JoinExpression> joins = C.list();
     private String rawSql;
 
-    private SQL(String entityName, Action action, WhereComponent where, OrderByList orderBy) {
+    private SQL(String entityName, Action action, List<JoinExpression> joins, WhereComponent where, OrderByList orderBy) {
         this.entityName = entityName;
-        this.entityAliasPrefix = entityName.substring(0, 1) + ".";
+        this.entityAliasPrefix = SqlPart.Util.entityAlias(entityName) + ".";
         this.action = action;
+        this.joins = joins;
         this.where = where;
         this.orderBy = orderBy;
     }
 
     private SQL(SQL copy) {
-        this(copy.entityName, copy.action, copy.where, copy.orderBy);
+        this(copy.entityName, copy.action, copy.joins, copy.where, copy.orderBy);
     }
 
     private SQL(String rawSql) {
-        this.rawSql = $.notNull(rawSql);
+        this.rawSql = $.requireNotNull(rawSql);
     }
 
     /**
@@ -117,6 +140,9 @@ public class SQL {
             StringBuilder buf = new StringBuilder();
             AtomicInteger paramCounter = new AtomicInteger();
             action.print(dialect, buf, paramCounter, entityAliasPrefix);
+            for (JoinExpression join : joins) {
+                join.print(dialect, buf, paramCounter, entityAliasPrefix);
+            }
             where.printWithLead(dialect, buf, paramCounter, entityAliasPrefix);
             orderBy.printWithLead(dialect, buf, paramCounter, entityAliasPrefix);
             rawSql = buf.toString();
@@ -127,10 +153,11 @@ public class SQL {
     public static class Builder {
         private String entityName;
         private Action action;
+        private List<JoinExpression> joins = new ArrayList<>();
         private WhereComponent where = WhereComponent.EMPTY;
         private OrderByList orderBy = OrderByList.EMPTY_LIST;
         public SQL toSQL() {
-            return new SQL(entityName, action, where, orderBy);
+            return new SQL(entityName, action, joins, where, orderBy);
         }
         public Builder select(String entityName, String... columns) {
             ensureNoAction();
@@ -198,13 +225,13 @@ public class SQL {
             } else {
                 list = C.list(expression);
             }
-            WhereComponent where = parseWhere(list.get(0));
+            String columns = list.get(0);
+            parseWhere(columns, builder);
             OrderByList orderBy = OrderByList.EMPTY_LIST;
             int sz = list.size();
             if (sz > 1) {
                 orderBy = parseOrderBy(list.drop(0).toArray(new String[sz - 1]));
             }
-            builder.where = where;
             builder.orderBy = orderBy;
             return builder;
         }
@@ -222,41 +249,41 @@ public class SQL {
         }
 
         // TODO support OR conditions
-        private static WhereComponent parseWhere(String whereClause) {
+        private static void parseWhere(String whereClause, Builder builder) {
             whereClause = whereClause.trim();
-            if (S.empty(whereClause)) {
-                return WhereComponent.EMPTY;
+            if (S.isBlank(whereClause)) {
+                builder.where = WhereComponent.EMPTY;
             }
             if (whereClause.matches("^by[A-Z].*$")) {
-                return parsePlay1Where(whereClause);
+                parsePlay1Where(whereClause, builder);
             } else {
-                return parseActWhere(whereClause);
+                parseActWhere(whereClause, builder);
             }
         }
 
-        private static WhereComponent parsePlay1Where(String whereClause) {
+        private static void parsePlay1Where(String whereClause, Builder builder) {
             whereClause = whereClause.substring(2);
             List<String> parts = S.fastSplit(whereClause, "And");
-            return parseWhere(parts);
+            parseWhere(parts, builder);
         }
 
-        private static WhereComponent parseActWhere(String whereClause) {
+        private static void parseActWhere(String whereClause, Builder builder) {
             List<String> parts = C.listOf(whereClause.split("[,;:]+"));
-            return parseWhere(parts);
+            parseWhere(parts, builder);
         }
 
-        private static WhereComponent parseWhere(List<String> parts) {
+        private static void parseWhere(List<String> parts, Builder builder) {
             List<WhereComponent> list = new ArrayList<>();
             for (String part: parts) {
-                WhereComponent comp = parseWhereComponent(part);
+                WhereComponent comp = parseWhereComponent(part, builder);
                 if (WhereComponent.EMPTY != comp) {
                     list.add(comp);
                 }
             }
-            return new GroupWhereComponent(LogicOperator.AND, list);
+            builder.where = new GroupWhereComponent(LogicOperator.AND, list);
         }
 
-        private static WhereComponent parseWhereComponent(String part) {
+        private static WhereComponent parseWhereComponent(String part, Builder builder) {
             if (S.blank(part)) {
                 return WhereComponent.EMPTY;
             }
@@ -264,6 +291,14 @@ public class SQL {
             String column = tokens.get(0);
             int sz = tokens.size();
             if (1 == sz) {
+                if (column.contains(".")) {
+                    List<String> l0 = S.fastSplit(column, ".");
+                    E.unsupportedIf(l0.size() != 2, "Multiple dot in column spec not supported.");
+                    String joinModel = l0.get(0);
+                    String field = l0.get(1);
+                    builder.joins.add(new JoinExpression(joinModel));
+                    return new SimpleWhereExpression(joinModel, field, Operator.EQ);
+                }
                 return new SimpleWhereExpression(column, Operator.EQ);
             } else {
                 String s = tokens.get(1);
@@ -271,6 +306,14 @@ public class SQL {
                 E.illegalArgumentIf(null == op, "Unknown operator: " + s);
                 if (sz > 2) {
                     LOGGER.warn("unused where clause tokens ignored: %s", S.string(tokens.drop(2)));
+                }
+                if (column.contains(".")) {
+                    List<String> l0 = S.fastSplit(column, ".");
+                    E.unsupportedIf(l0.size() != 2, "Multiple dot in column spec not supported.");
+                    String joinModel = l0.get(0);
+                    String field = l0.get(1);
+                    builder.joins.add(new JoinExpression(joinModel));
+                    return new SimpleWhereExpression(joinModel, field, op);
                 }
                 return new SimpleWhereExpression(column, op);
             }

@@ -40,7 +40,7 @@ public interface SqlPart {
 
     class Util {
         public static String entityAlias(String entityName) {
-            return entityName.substring(0, 1);
+            return entityName;
         }
     }
 

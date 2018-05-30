@@ -1,5 +1,9 @@
 # act-jpa-common CHANGE LOG
 
+1.3.1
+* `JPAQuery.first()` raised `NoResultException` when no result found #6
+* Add `findOne` method to `JPAQuery` #7
+
 1.3.0 - 20/May/2018
 * export entity manager in JPADao #4
 * update act to 1.8.8-RC7

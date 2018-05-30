@@ -136,9 +136,21 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         }
     }
 
+    /**
+     * Alias of {@link #first()}
+     * @return the first result found
+     */
+    public MODEL_TYPE findOne() {
+        return first();
+    }
+
     @Override
     public MODEL_TYPE first() {
-        return $.cast(q().getSingleResult());
+        try {
+            return $.cast(q().getSingleResult());
+        } catch (NoResultException e) {
+            return null;
+        }
     }
 
     @Override

@@ -1,6 +1,14 @@
 # act-jpa-common CHANGE LOG
 
-1.3.1
+1.5.0
+* `JPAQuery.as(Type)` failed to copy parameter settings #10
+* Add `delete()` method to `JPAQuery` #9
+* update to act-1.8.8-RC9
+* update to act-sql-common-1.4.1
+
+1.4.0
+* update to act-1.8.8-RC8
+* update to act-sql-common 1.4.0
 * `JPAQuery.first()` raised `NoResultException` when no result found #6
 * Add `findOne` method to `JPAQuery` #7
 

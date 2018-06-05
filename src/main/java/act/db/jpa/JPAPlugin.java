@@ -68,8 +68,7 @@ public abstract class JPAPlugin extends SqlDbPlugin {
     }
 
     @Override
-    protected void applyTo(final App app) {
-        super.applyTo(app);
+    protected void doExtendedApplyTo(final App app) {
         app.eventBus().bind(ReflectedHandlerInvokerInit.class, new ActEventListenerBase<ReflectedHandlerInvokerInit>() {
             @Override
             public void on(ReflectedHandlerInvokerInit event) {

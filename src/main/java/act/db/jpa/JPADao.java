@@ -183,10 +183,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     @Override
     public void delete(JPAQuery<MODEL_TYPE> query) {
-        EntityManager em = emForWrite();
-        query = query.asDelete();
-        query.executeUpdate();
-        em.flush();
+        query.delete();
     }
 
     @Override
@@ -201,7 +198,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     @Override
     public void deleteAll() {
-        delete(q(DELETE));
+        q(DELETE).delete();
     }
 
     @Override
@@ -238,6 +235,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         }
         return q;
     }
+
 
     @Override
     public JPAQuery<MODEL_TYPE> createQuery(String expression, Object... values) {
@@ -290,7 +288,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         emForWrite();
     }
 
-    private EntityManager emForWrite() {
+    EntityManager emForWrite() {
         return JPAContext.emWithTx(jpa());
     }
 

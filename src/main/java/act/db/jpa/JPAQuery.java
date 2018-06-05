@@ -58,9 +58,9 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         this.columns = columns;
     }
 
-    private JPAQuery(JPAQuery copy) {
+    private JPAQuery(JPAQuery copy, SQL.Type type) {
         this.svc = copy.svc;
-        this.em = copy.em;
+        this.type = type;
         this.entityClass = copy.entityClass;
         this.type = copy.type;
         this.expression = copy.expression;
@@ -71,6 +71,10 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         this.hints = copy.hints;
         this.flushMode = copy.flushMode;
         this.lockMode = copy.lockMode;
+        this.em = type.readOnly() ? JPAContext.em(svc, true) : JPAContext.emWithTx(svc);
+        this.params = new HashMap<>(copy.params);
+        this.calendarParams = new HashMap<>(copy.calendarParams);
+        this.dateParams = new HashMap<>(copy.dateParams);
     }
 
     public JPAQuery<MODEL_TYPE> asFind() {
@@ -96,7 +100,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         if (type == this.type) {
             return this;
         } else {
-            JPAQuery<MODEL_TYPE> copy = new JPAQuery<>(this);
+            JPAQuery<MODEL_TYPE> copy = new JPAQuery<>(this, type);
             copy.type = type;
             return copy;
         }
@@ -127,7 +131,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     @Override
     public JPAQuery<MODEL_TYPE> orderBy(String... fieldList) {
         if (null != q) {
-            JPAQuery newQuery = new JPAQuery(this);
+            JPAQuery newQuery = new JPAQuery(this, this.type);
             newQuery.orderByList = fieldList;
             return newQuery;
         } else {
@@ -165,6 +169,13 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         }
         Number n = (Number) q().getSingleResult();
         return n.longValue();
+    }
+
+    public int delete() {
+        if (type != SQL.Type.DELETE) {
+            return asDelete().delete();
+        }
+        return executeUpdate();
     }
 
     // -- EOF act Dao.Query --

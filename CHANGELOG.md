@@ -1,6 +1,6 @@
 # act-jpa-common CHANGE LOG
 
-1.5.1
+1.5.1 - 19/Jun/2018
 * update act to 1.8.8-RC10
 * update sql-common to 1.4.2
 * Setup and Teardown Tx scope on JobContext initialized and destroyed event #11

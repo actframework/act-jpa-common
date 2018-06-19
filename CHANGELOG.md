@@ -1,5 +1,10 @@
 # act-jpa-common CHANGE LOG
 
+1.5.1
+* update act to 1.8.8-RC10
+* update sql-common to 1.4.2
+* Setup and Teardown Tx scope on JobContext initialized and destroyed event #11
+
 1.5.0
 * `JPAQuery.as(Type)` failed to copy parameter settings #10
 * Add `delete()` method to `JPAQuery` #9

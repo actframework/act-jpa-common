@@ -9,9 +9,9 @@ package act.db.jpa;
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -37,6 +37,8 @@ import act.handler.event.PostHandle;
 import act.handler.event.PreHandle;
 import act.handler.event.ReflectedHandlerInvokerInit;
 import act.handler.event.ReflectedHandlerInvokerInvoke;
+import act.job.event.JobContextDestroyed;
+import act.job.event.JobContextInitialized;
 import org.osgl.logging.LogManager;
 import org.osgl.logging.Logger;
 import org.osgl.mvc.result.Result;
@@ -100,6 +102,16 @@ public abstract class JPAPlugin extends SqlDbPlugin {
             public void on(EventObject event) {
                 JPAContext.init();
             }
+        }).bind(JobContextInitialized.class, new ActEventListenerBase() {
+            @Override
+            public void on(EventObject event) {
+                JPAContext.init();
+            }
+        }).bind(JobContextDestroyed.class, new ActEventListenerBase() {
+            @Override
+            public void on(EventObject event) {
+                JPAContext.close();
+            }
         }).bind(SysEventId.DB_SVC_LOADED, new SysEventListenerBase<SysEvent>() {
             @Override
             public void on(SysEvent event) {
@@ -122,6 +134,7 @@ public abstract class JPAPlugin extends SqlDbPlugin {
                 JPAContext.setRollback();
                 return null;
             }
+
             @Override
             public void accept(ActionHandlerInvoker.Visitor visitor) {
 

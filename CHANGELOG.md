@@ -1,6 +1,7 @@
 # act-jpa-common CHANGE LOG
 
 1.5.2
+* JPAQuery save() can not execute SQL for the first time after act startup #14
 * JPADao's deleteById throw NullPointerException #15
 
 1.5.1 - 19/Jun/2018

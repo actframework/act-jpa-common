@@ -21,11 +21,14 @@ package act.db.jpa;
  */
 
 import static act.Act.app;
+import static act.app.DbServiceManager.DEFAULT;
 import static act.db.jpa.sql.SQL.Type.*;
 
+import act.Act;
 import act.app.DbServiceManager;
 import act.db.DB;
 import act.db.DaoBase;
+import act.db.DbService;
 import act.db.Model;
 import act.db.jpa.sql.SQL;
 import act.inject.param.NoBind;
@@ -58,6 +61,13 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     }
 
     public JPADao() {
+        DB db = modelType().getAnnotation(DB.class);
+        String svcId = null == db ? DEFAULT : db.value();
+        DbServiceManager dbm = Act.app().dbServiceManager();
+        DbService dbService = dbm.dbService(svcId);
+        E.invalidConfigurationIf(null == dbService, "cannot find db service by id: %s", svcId);
+        E.unexpectedIfNot(dbService instanceof JPAService, "expected JPAService, found: " + dbService.getClass().getSimpleName());
+        setJPAService((JPAService) dbService);
     }
 
     public JPAService jpa() {
@@ -67,7 +77,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         synchronized (this) {
             if (null == _jpa) {
                 DB db = modelType().getAnnotation(DB.class);
-                String dbId = null == db ? DbServiceManager.DEFAULT : db.value();
+                String dbId = null == db ? DEFAULT : db.value();
                 _jpa = app().dbServiceManager().dbService(dbId);
             }
         }

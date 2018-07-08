@@ -1,5 +1,8 @@
 # act-jpa-common CHANGE LOG
 
+1.5.2
+* JPADao's deleteById throw NullPointerException #15
+
 1.5.1 - 19/Jun/2018
 * update act to 1.8.8-RC10
 * update sql-common to 1.4.2

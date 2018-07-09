@@ -59,6 +59,7 @@ public class JPAContext extends DestroyableBase {
 
     private boolean noTx;
     private boolean rollback;
+    private boolean initForJob;
     private Map<String, Info> data = new HashMap<>();
 
     private JPAContext() {
@@ -204,6 +205,13 @@ public class JPAContext extends DestroyableBase {
         return TxContext.readOnly(preferredReadOnly);
     }
 
+    public static void initForJob() {
+        E.illegalStateIf(null != cur_.get(), "JPAContext already set");
+        JPAContext ctx = new JPAContext();
+        ctx.initForJob = true;
+        cur_.set(ctx);
+    }
+
     public static void init() {
         E.illegalStateIf(null != cur_.get(), "JPAContext already set");
         cur_.set(new JPAContext());
@@ -218,6 +226,14 @@ public class JPAContext extends DestroyableBase {
         JPAContext ctx = cur_.get();
         if (null != ctx) {
             ctx._setRollback();
+        }
+    }
+
+    public static void closeForJob() {
+        JPAContext cur = cur_.get();
+        if (null != cur && cur.initForJob) {
+            cur.destroy();
+            cur_.remove();
         }
     }
 

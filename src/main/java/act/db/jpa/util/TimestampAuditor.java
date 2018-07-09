@@ -61,7 +61,7 @@ public class TimestampAuditor {
             public void run() {
                 app.registerSingleton(me);
             }
-        }, false);
+        }, true);
     }
 
     @PrePersist

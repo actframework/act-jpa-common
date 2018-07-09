@@ -105,12 +105,12 @@ public abstract class JPAPlugin extends SqlDbPlugin {
         }).bind(JobContextInitialized.class, new ActEventListenerBase() {
             @Override
             public void on(EventObject event) {
-                JPAContext.init();
+                JPAContext.initForJob();
             }
         }).bind(JobContextDestroyed.class, new ActEventListenerBase() {
             @Override
             public void on(EventObject event) {
-                JPAContext.close();
+                JPAContext.closeForJob();
             }
         }).bind(SysEventId.DB_SVC_LOADED, new SysEventListenerBase<SysEvent>() {
             @Override

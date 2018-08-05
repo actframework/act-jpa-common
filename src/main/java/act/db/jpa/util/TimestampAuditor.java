@@ -23,24 +23,16 @@ package act.db.jpa.util;
 import act.Act;
 import act.app.App;
 import act.app.event.SysEventId;
-import act.db.DbManager;
-import act.db.DbService;
-import act.db.TimestampGenerator;
-import act.db.meta.EntityClassMetaInfo;
-import act.db.meta.EntityFieldMetaInfo;
-import act.db.meta.EntityMetaInfoRepo;
-import act.db.meta.MasterEntityMetaInfoRepo;
-import act.util.ClassInfoRepository;
-import act.util.ClassNode;
-import act.util.Stateless;
+import act.db.*;
+import act.db.meta.*;
+import act.plugin.PrincipalProvider;
+import act.util.*;
 import org.osgl.$;
+import org.osgl.Lang;
 import org.osgl.util.E;
 
 import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
@@ -49,6 +41,8 @@ public class TimestampAuditor {
 
     private Map<Class, $.Visitor> createdAtLookup = new HashMap<>();
     private Map<Class, $.Visitor> lastModifiedAtLookup = new HashMap<>();
+    private Map<Class, $.Visitor> createdByLookup = new HashMap<>();
+    private Map<Class, $.Visitor> lastModifiedByLookup = new HashMap<>();
 
     public TimestampAuditor() {
         buildLookups();
@@ -69,12 +63,15 @@ public class TimestampAuditor {
         Class<?> entityType = entity.getClass();
         apply(createdAtLookup.get(entityType), entity);
         apply(lastModifiedAtLookup.get(entityType), entity);
+        apply(createdByLookup.get(entityType), entity);
+        apply(lastModifiedByLookup.get(entityType), entity);
     }
 
     @PreUpdate
     public void preUpdate(Object entity) {
         Class<?> entityType = entity.getClass();
         apply(lastModifiedAtLookup.get(entityType), entity);
+        apply(lastModifiedByLookup.get(entityType), entity);
     }
 
     private void buildLookups() {
@@ -108,7 +105,31 @@ public class TimestampAuditor {
                             EntityFieldMetaInfo fieldInfo = classInfo.createdAtField();
                             if (null == fieldInfo) {
                                 Class entityClass = app.classForName(className);
-                                createdAtLookup.put(app.classForName(className), timestampFieldVisitor);
+                                createdAtLookup.put(entityClass, timestampFieldVisitor);
+                                entityClasses.remove(entityClass);
+                            }
+                        }
+                    }, true, true);
+                }
+                fieldInfo = classInfo.createdByField();
+                if (null != fieldInfo) {
+                    final Field field = $.requireNotNull($.fieldOf(entityClass, fieldInfo.fieldName()));
+                    field.setAccessible(true);
+                    final PricipalFieldVisitor pricipalFieldVisitor = new PricipalFieldVisitor(field);
+                    createdByLookup.put(entityClass, pricipalFieldVisitor);
+                    final ClassNode node = classInfoRepository.node(entityClass.getName());
+                    node.visitSubTree(new $.Visitor<ClassNode>() {
+                        @Override
+                        public void visit(ClassNode classNode) throws $.Break {
+                            String className = classNode.name();
+                            EntityClassMetaInfo classInfo = repo.classMetaInfo(className);
+                            if (null == classInfo) {
+                                return;
+                            }
+                            EntityFieldMetaInfo fieldInfo = classInfo.createdByField();
+                            if (null == fieldInfo) {
+                                Class entityClass = app.classForName(className);
+                                createdByLookup.put(entityClass, pricipalFieldVisitor);
                                 entityClasses.remove(entityClass);
                             }
                         }
@@ -131,7 +152,30 @@ public class TimestampAuditor {
                             EntityFieldMetaInfo fieldInfo = classInfo.createdAtField();
                             if (null == fieldInfo) {
                                 Class entityClass = app.classForName(className);
-                                lastModifiedAtLookup.put(app.classForName(className), timestampFieldVisitor);
+                                lastModifiedAtLookup.put(entityClass, timestampFieldVisitor);
+                                entityClasses.remove(entityClass);
+                            }
+                        }
+                    }, true, true);
+                }
+                fieldInfo = classInfo.lastModifiedByField();
+                if (null != fieldInfo) {
+                    Field field = $.requireNotNull($.fieldOf(entityClass, fieldInfo.fieldName()));
+                    final PricipalFieldVisitor pricipalFieldVisitor = new PricipalFieldVisitor(field);
+                    lastModifiedByLookup.put(entityClass, pricipalFieldVisitor);
+                    final ClassNode node = classInfoRepository.node(entityClass.getName());
+                    node.visitSubTree(new $.Visitor<ClassNode>() {
+                        @Override
+                        public void visit(ClassNode classNode) throws $.Break {
+                            String className = classNode.name();
+                            EntityClassMetaInfo classInfo = repo.classMetaInfo(className);
+                            if (null == classInfo) {
+                                return;
+                            }
+                            EntityFieldMetaInfo fieldInfo = classInfo.createdByField();
+                            if (null == fieldInfo) {
+                                Class entityClass = app.classForName(className);
+                                lastModifiedByLookup.put(entityClass, pricipalFieldVisitor);
                                 entityClasses.remove(entityClass);
                             }
                         }
@@ -163,6 +207,25 @@ public class TimestampAuditor {
             } catch (IllegalAccessException e) {
                 throw E.unexpected(e);
             }
+        }
+    }
+
+    private static class PricipalFieldVisitor extends $.Visitor {
+        final Field field;
+        final PrincipalProvider principalProvider;
+
+        public PricipalFieldVisitor(Field field) {
+            field.setAccessible(true);
+            this.field = field;
+            this.principalProvider = Act.app().principalProvider();
+        }
+
+        @Override
+        public void visit(Object o) throws Lang.Break {
+            if (null == o) {
+                return;
+            }
+            $.setFieldValue(o, field, principalProvider.get());
         }
     }
 

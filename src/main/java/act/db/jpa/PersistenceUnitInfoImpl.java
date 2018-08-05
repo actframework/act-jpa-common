@@ -146,7 +146,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     @Override
     public boolean excludeUnlistedClasses() {
-        return false;
+        return true;
     }
 
     @Override
@@ -181,7 +181,7 @@ public class PersistenceUnitInfoImpl implements PersistenceUnitInfo {
 
     @Override
     public ClassLoader getNewTempClassLoader() {
-        return null;
+        return classLoader;
     }
 
     public static void main(String[] args) throws Exception {

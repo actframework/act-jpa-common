@@ -247,6 +247,19 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     }
 
 
+    /**
+     * Create a Find query.
+     *
+     * E.g.
+     *
+     * ```
+     * List<User> users = userDao.createQuery("age <,gender", ageLimit, Gender.MALE).fetch
+     * ```
+     *
+     * @param expression the expression to filter records to be selected.
+     * @param values the parameter values used in the expression
+     * @return a Find query
+     */
     @Override
     public JPAQuery<MODEL_TYPE> createQuery(String expression, Object... values) {
         return q(expression, values);
@@ -267,6 +280,12 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         return q;
     }
 
+    /**
+     * Create a delete query.
+     * @param expression the expression to filter the records to be deleted.
+     * @param values the parameter values used in the expression
+     * @return a delete query
+     */
     public JPAQuery<MODEL_TYPE> createDeleteQuery(String expression, Object... values) {
         return q(DELETE, expression, values);
     }

@@ -1,0 +1,54 @@
+Scenario(Login):
+  constants:
+    principalName: ${randUsername()}
+  interactions:
+    - description: logout existing user
+      request:
+        method: POST
+        url: /logout
+    - description: login an new user
+      request:
+        method: POST
+        url: /login
+        params:
+          username: ${principalName}
+Scenario(User service):
+  depends:
+    - Login
+  constants:
+    newUserFirstName: ${randFirstName()}
+    newUserLastName: ${randLastName()}
+    newUserGender: ${randOf(F,M)}
+    newUserLevel: ${randInt(10, 20)}
+  interactions:
+    - description: create new user
+      request:
+        method: POST
+        url: /users
+        json:
+          firstName: ${newUserFirstName}
+          lastName: ${newUserLastName}
+          gender: ${newUserGender}
+          level: ${newUserLevel}
+      response:
+        json:
+          id:
+            - exists: true
+      cache:
+        newUserId: id
+    - description: fetch the user just created
+      request:
+        method: GET
+        url: /users/${newUserId}
+      response:
+        json:
+          firstName: ${newUserFirstName}
+          lastName: ${newUserLastName}
+          gender: ${newUserGender}
+          level: ${newUserLevel}
+          registerDate:
+            - exists: true
+          updateDate:
+            - exists: true
+          creator: ${principalName}
+          updator: ${principalName}

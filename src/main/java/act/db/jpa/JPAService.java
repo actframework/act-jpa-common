@@ -290,7 +290,8 @@ public abstract class JPAService extends SqlDbService {
     ) {
         Properties properties = properties();
         properties = processProperties(properties, dataSourceConfig, null != externalDataSource);
-        List<Class> managedClasses = C.list(entityMetaInfoRepo.entityClasses());
+        List<Class> managedClasses = C.newList(entityMetaInfoRepo.entityClasses());
+        managedClasses.addAll(entityMetaInfoRepo.converterClasses());
         if (readOnly) {
             dbName = dbName + "-ro";
         }

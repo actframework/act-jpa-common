@@ -1,8 +1,10 @@
 # act-jpa-common CHANGE LOG
 
 1.5.2
-* JPAQuery save() can not execute SQL for the first time after act startup #14
+*
+* Extends Timestamp auditing to support user auditing #21
 * JPADao's deleteById throw NullPointerException #15
+* JPAQuery save() can not execute SQL for the first time after act startup #14
 
 1.5.1 - 19/Jun/2018
 * update act to 1.8.8-RC10

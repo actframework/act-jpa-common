@@ -192,7 +192,7 @@ public class SQL {
     public static class Parser {
         public static SQL parse(Type type, String entityName, String expression, String... columns) {
             if (S.isBlank(expression)) {
-                return type.startParsing(entityName).toSQL();
+                return type.startParsing(entityName, columns).toSQL();
             }
             String lowerCase = expression.trim().toLowerCase();
             if (lowerCase.startsWith("select ") || lowerCase.startsWith("update ") || lowerCase.startsWith("delete ") || lowerCase.startsWith("from ")) {

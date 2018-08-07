@@ -1,7 +1,7 @@
 # act-jpa-common CHANGE LOG
 
 1.5.2
-*
+* `IllegalStateException` when calling `JPADao.save(entity)` method #22
 * Extends Timestamp auditing to support user auditing #21
 * JPADao's deleteById throw NullPointerException #15
 * JPAQuery save() can not execute SQL for the first time after act startup #14

@@ -25,7 +25,7 @@
   <dependencies>
     <dependency>
       <groupId>org.actframework</groupId>
-      <artifactId>act-hibernate</artifactId>
+      <artifactId>act-eclipselink</artifactId>
     </dependency>
     <dependency>
       <groupId>com.zaxxer</groupId>

@@ -238,6 +238,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     public JPAQuery<MODEL_TYPE> q(SQL.Type type, String expression, Object... values) {
         E.unsupportedIf(SQL.Type.UPDATE == type, "UPDATE not supported in q() API");
         JPAService jpa = jpa();
+
         JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa, em(jpa, type.readOnly()), modelClass, type, expression);
         int len = values.length;
         for (int i = 0; i < len; ++i) {
@@ -339,7 +340,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     }
 
     private EntityManager em(JPAService jpa, boolean readOnly) {
-        return JPAContext.em(jpa, readOnly);
+        return readOnly ? JPAContext.em(jpa, true) : JPAContext.emWithTx(jpa);
     }
 
 }

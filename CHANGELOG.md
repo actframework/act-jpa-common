@@ -1,6 +1,8 @@
 # act-jpa-common CHANGE LOG
 
 1.5.2
+* `JPAQuery` - `offset` and `limit` is not effective #24
+* `JPADao.first()` triggered issue when more than one records filtered #23
 * `IllegalStateException` when calling `JPADao.save(entity)` method #22
 * Extends Timestamp auditing to support user auditing #21
 * JPADao's deleteById throw NullPointerException #15

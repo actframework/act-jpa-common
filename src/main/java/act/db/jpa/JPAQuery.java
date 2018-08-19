@@ -151,9 +151,13 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     @Override
     public MODEL_TYPE first() {
         try {
-            return $.cast(q().getSingleResult());
+            limit(1);
+            List<MODEL_TYPE> list = fetch();
+            return null == list || list.isEmpty() ? null : list.get(0);
         } catch (NoResultException e) {
             return null;
+        } finally {
+            q = null;
         }
     }
 
@@ -387,6 +391,12 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
             }
             if (null != flushMode) {
                 q.setFlushMode(flushMode);
+            }
+            if (null != limit) {
+                q.setMaxResults(limit);
+            }
+            if (null != offset) {
+                q.setFirstResult(offset);
             }
             for (Map.Entry<Integer, Object> entry : params.entrySet()) {
                 q.setParameter(entry.getKey(), entry.getValue());

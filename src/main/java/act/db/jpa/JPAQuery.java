@@ -151,9 +151,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
     @Override
     public MODEL_TYPE first() {
         try {
-            limit(1);
-            List<MODEL_TYPE> list = fetch();
-            return null == list || list.isEmpty() ? null : list.get(0);
+            return (MODEL_TYPE) q().getSingleResult();
         } catch (NoResultException e) {
             return null;
         } finally {

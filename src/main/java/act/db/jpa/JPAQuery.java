@@ -71,7 +71,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         this.hints = copy.hints;
         this.flushMode = copy.flushMode;
         this.lockMode = copy.lockMode;
-        this.em = type.readOnly() ? JPAContext.em(svc, true) : JPAContext.emWithTx(svc);
+        this.em = JPADao.readOnly(type) ? JPAContext.em(svc, true) : JPAContext.emWithTx(svc);
         this.params = new HashMap<>(copy.params);
         this.calendarParams = new HashMap<>(copy.calendarParams);
         this.dateParams = new HashMap<>(copy.dateParams);

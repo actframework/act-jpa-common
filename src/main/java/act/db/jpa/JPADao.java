@@ -25,6 +25,7 @@ import static act.app.DbServiceManager.DEFAULT;
 import static act.db.jpa.sql.SQL.Type.*;
 
 import act.Act;
+import act.app.ActionContext;
 import act.app.DbServiceManager;
 import act.db.DB;
 import act.db.DaoBase;
@@ -239,7 +240,7 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         E.unsupportedIf(SQL.Type.UPDATE == type, "UPDATE not supported in q() API");
         JPAService jpa = jpa();
 
-        JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa, em(jpa, type.readOnly()), modelClass, type, expression);
+        JPAQuery<MODEL_TYPE> q = new JPAQuery<>(jpa, em(jpa, readOnly(type)), modelClass, type, expression);
         int len = values.length;
         for (int i = 0; i < len; ++i) {
             q.setParameter(i + 1, values[i]);
@@ -341,6 +342,14 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
 
     private EntityManager em(JPAService jpa, boolean readOnly) {
         return readOnly ? JPAContext.em(jpa, true) : JPAContext.emWithTx(jpa);
+    }
+
+    public static boolean readOnly(SQL.Type type) {
+        ActionContext actionContext = ActionContext.current();
+        if (null != actionContext && actionContext.req().method().unsafe()) {
+            return false;
+        }
+        return type.readOnly();
     }
 
 }

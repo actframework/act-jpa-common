@@ -20,6 +20,7 @@ package act.db.jpa;
  * #L%
  */
 
+import act.app.ActionContext;
 import act.db.jpa.sql.SqlDialect;
 import act.db.sql.tx.TxContext;
 import act.util.DestroyableBase;
@@ -206,6 +207,9 @@ public class JPAContext extends DestroyableBase {
     }
 
     public static void initForJob() {
+        if (null != ActionContext.current()) {
+            return;
+        }
         E.illegalStateIf(null != cur_.get(), "JPAContext already set");
         JPAContext ctx = new JPAContext();
         ctx.initForJob = true;
@@ -230,6 +234,9 @@ public class JPAContext extends DestroyableBase {
     }
 
     public static void closeForJob() {
+        if (null != ActionContext.current()) {
+            return;
+        }
         JPAContext cur = cur_.get();
         if (null != cur && cur.initForJob) {
             cur.destroy();

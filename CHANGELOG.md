@@ -1,7 +1,8 @@
 # act-jpa-common CHANGE LOG
 
 1.5.2
-* it shall use non-readOnly entity manager for POST/PUT requests #27
+* Apply new scope for implicit transaction #28
+* it shall use non-readOnly entity manager for POST/PUT/DELETE requests #27
 * `JPAContext.initForJob()` issue when invoking a `Job` within an `ActionContext` #26
 * `JPAQuery` - `offset` and `limit` is not effective #24
 * `JPADao.first()` triggered issue when more than one records filtered #23

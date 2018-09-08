@@ -29,14 +29,9 @@ import act.db.jpa.util.TimestampAuditor;
 import act.db.sql.SqlDbPlugin;
 import act.event.ActEventListenerBase;
 import act.event.SysEventListenerBase;
-import act.handler.builtin.controller.ActionHandlerInvoker;
-import act.handler.builtin.controller.ExceptionInterceptor;
-import act.handler.builtin.controller.RequestHandlerProxy;
+import act.handler.builtin.controller.*;
 import act.handler.builtin.controller.impl.ReflectedHandlerInvoker;
-import act.handler.event.PostHandle;
-import act.handler.event.PreHandle;
-import act.handler.event.ReflectedHandlerInvokerInit;
-import act.handler.event.ReflectedHandlerInvokerInvoke;
+import act.handler.event.*;
 import act.job.event.JobContextDestroyed;
 import act.job.event.JobContextInitialized;
 import org.osgl.logging.LogManager;
@@ -91,9 +86,9 @@ public abstract class JPAPlugin extends SqlDbPlugin {
                     JPAContext.setNoTx();
                 }
             }
-        }).bind(PostHandle.class, new ActEventListenerBase<PostHandle>() {
+        }).bind(BeforeResultCommit.class, new ActEventListenerBase<BeforeResultCommit>() {
             @Override
-            public void on(PostHandle event) {
+            public void on(BeforeResultCommit event) {
                 // try close JPAContext anyway
                 JPAContext.close();
             }

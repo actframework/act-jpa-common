@@ -81,6 +81,9 @@ public class JPAContext extends DestroyableBase {
 
     @Override
     protected void releaseResources() {
+        if (_withinTxScope()) {
+            _exitTxScope(rollback);
+        }
         for (Info info : data.values()) {
             EntityManager em = info.em;
             if (null != em && em.isOpen()) {
@@ -161,9 +164,11 @@ public class JPAContext extends DestroyableBase {
 
     public static EntityManager emWithTx(JPAService jpa) {
         JPAContext ctx = ensureContext();
-        EntityManager em = ctx._em(jpa, false);
+        Info info = ctx.ensureInfo(jpa, false);
+        EntityManager em = info.em;
         if (!ctx._withinTxScope()) {
             jpa.forceBeginTx(em);
+            info.tx = em.getTransaction();
         }
         return em;
     }

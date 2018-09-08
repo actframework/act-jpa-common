@@ -312,7 +312,9 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
     }
 
     public EntityManager emForRead() {
-        return JPAContext.em(jpa(), true);
+        ActionContext ctx = ActionContext.current();
+        boolean readWrite = null != ctx && ctx.req().method().unsafe();
+        return JPAContext.em(jpa(), !readWrite);
     }
 
     private void prepareForWrite() {

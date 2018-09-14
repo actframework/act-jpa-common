@@ -22,7 +22,7 @@ package act.db.jpa;
 
 import act.app.ActionContext;
 import act.db.jpa.sql.SqlDialect;
-import act.db.sql.tx.TxContext;
+import act.db.tx.TxContext;
 import act.util.DestroyableBase;
 import org.osgl.logging.Logger;
 import org.osgl.util.E;

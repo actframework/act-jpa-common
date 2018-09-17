@@ -63,7 +63,6 @@ public class JPAContext extends DestroyableBase {
     private Map<String, Info> data = new HashMap<>();
 
     private JPAContext() {
-        super(true);
     }
 
     private void _setNoTx() {

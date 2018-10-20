@@ -1,0 +1,24 @@
+Scenario(GH15):
+  description: "[GH15] JPADao's deleteById throw NullPointerException"
+  interactions:
+  - description: Create Foo
+    request:
+      post: /15
+      params:
+        name: foo
+    cache:
+      fooId: id
+  - description: Verify Foo creation
+    request:
+      get: /15/${fooId}
+    response:
+      json:
+        name: foo
+  - description: Delete Foo Created
+    request:
+      delete: /15/${fooId}
+  - description: Verify Foo deletion
+    request:
+      get: /15/${fooId}
+    response:
+      status: 404

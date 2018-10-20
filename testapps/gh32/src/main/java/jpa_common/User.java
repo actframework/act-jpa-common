@@ -1,6 +1,5 @@
 package jpa_common;
 
-import act.cli.Command;
 import act.controller.annotation.UrlContext;
 import act.db.DbBind;
 import act.db.jpa.JPADao;
@@ -30,13 +29,11 @@ public class User  {
     @EnableCircularReferenceDetect
     public static class Dao extends JPADao<Long, User> {
 
-        @Command("user.create")
         @PostAction
         public User create(User user) {
             return save(user);
         }
 
-        @Command("user.show")
         @GetAction("{user}")
         public User find(@DbBind User user) {
             return user;

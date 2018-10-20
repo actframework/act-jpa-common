@@ -1,7 +1,5 @@
 package jpa_common;
 
-import act.cli.Command;
-import act.cli.Required;
 import act.controller.annotation.UrlContext;
 import act.db.DbBind;
 import act.db.jpa.JPADao;
@@ -30,34 +28,23 @@ public class Order {
 
     @Stateless
     @UrlContext("orders")
+    @EnableCircularReferenceDetect
     public static class Dao extends JPADao<Long, Order> {
 
-        @Command("order.create")
         @PostAction
-        @EnableCircularReferenceDetect
-        public Order create(
-                @Required String product,
-                @Required int quantity,
-                @Required @DbBind @NotNull User agent
-        ) {
-            Order order = new Order();
-            order.product = product;
-            order.quantity = quantity;
+        public Order create(Order order, @DbBind @NotNull User agent) {
             order.agent = agent;
             return save(order);
         }
 
         @GetAction("{order}")
-        @EnableCircularReferenceDetect
         public Order show(@DbBind Order order) {
             return order;
         }
 
         @GetAction
-        @EnableCircularReferenceDetect
         public Iterable<Order> list() {
             return findAll();
-
         }
 
     }

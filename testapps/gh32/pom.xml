@@ -23,7 +23,11 @@
   <dependencies>
     <dependency>
       <groupId>org.actframework</groupId>
-      <artifactId>act-eclipselink</artifactId>
+      <artifactId>act-hibernate</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.zaxxer</groupId>
+      <artifactId>HikariCP</artifactId>
     </dependency>
   </dependencies>
 

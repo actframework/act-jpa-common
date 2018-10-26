@@ -5,11 +5,13 @@ import act.db.DbBind;
 import act.db.jpa.JPADao;
 import act.util.EnableCircularReferenceDetect;
 import act.util.Stateless;
+import org.hibernate.Hibernate;
 import org.osgl.mvc.annotation.GetAction;
 import org.osgl.mvc.annotation.PostAction;
 
 import java.util.List;
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity(name = "user")
 public class User  {
@@ -21,8 +23,16 @@ public class User  {
     public String firstName;
     public String lastName;
 
-    @OneToMany(mappedBy = "agent")
-    public List<Order> orders;
+    @OneToMany(mappedBy = "agent", fetch = FetchType.LAZY)
+    private List<Order> orders;
+
+    public List<Order> getOrders() {
+        return orders;
+    }
+
+    public void setOrders(List<Order> orders) {
+        this.orders = orders;
+    }
 
     @Stateless
     @UrlContext("users")
@@ -36,6 +46,7 @@ public class User  {
 
         @GetAction("{user}")
         public User find(@DbBind User user) {
+            Hibernate.initialize(user.getOrders());
             return user;
         }
 
@@ -43,5 +54,11 @@ public class User  {
         public Iterable<User> list() {
             return findAll();
         }
+
+        @GetAction("{agent}/orders")
+        public Iterable<Order> ordersByUser(@DbBind @NotNull User agent, Order.Dao orderDao) {
+            return orderDao.findBy("agent_id", agent.id);
+        }
+
     }
 }

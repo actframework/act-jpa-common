@@ -214,6 +214,9 @@ public class JPAContext extends DestroyableBase {
         if (null != ActionContext.current()) {
             return;
         }
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("JPA context init for job");
+        }
         E.illegalStateIf(null != cur_.get(), "JPAContext already set");
         JPAContext ctx = new JPAContext();
         ctx.initForJob = true;
@@ -221,6 +224,14 @@ public class JPAContext extends DestroyableBase {
     }
 
     public static void init() {
+        if (LOGGER.isTraceEnabled()) {
+            ActionContext ctx = ActionContext.current();
+            if (null == ctx) {
+                LOGGER.trace("JPA context init");
+            } else {
+                LOGGER.trace("JPA context init - " + ctx.req());
+            }
+        }
         E.illegalStateIf(null != cur_.get(), "JPAContext already set");
         cur_.set(new JPAContext());
     }
@@ -241,6 +252,9 @@ public class JPAContext extends DestroyableBase {
         if (null != ActionContext.current()) {
             return;
         }
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("JPA context close for job");
+        }
         JPAContext cur = cur_.get();
         if (null != cur && cur.initForJob) {
             cur.destroy();
@@ -249,6 +263,9 @@ public class JPAContext extends DestroyableBase {
     }
 
     public static void close() {
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("JPA context close");
+        }
         JPAContext cur = cur_.get();
         if (null != cur) {
             cur.destroy();

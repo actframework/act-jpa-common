@@ -1,0 +1,39 @@
+Scenario(32):
+  urlContext: /32
+  description: "[GH32] JPAQuery could not support JPA mappedBy annotation"
+  interactions:
+  - description: Create a User
+    request:
+      post: users
+      params:
+        firstName: Man
+        lastName: X
+    cache:
+      userId: id
+  - description: Create an Order
+    request:
+      post: orders
+      params:
+        order.product: laptop
+        agent: ${userId}
+    cache:
+      orderId: id
+  - description: get the order
+    request:
+      get: orders/${orderId}
+    response:
+      json:
+        product: laptop
+        agent:
+          firstName: Man
+  - description: get the user along with order
+    request:
+      get: users/${userId}
+    response:
+      json:
+        firstName: Man
+        lastName: X
+        orders:
+          size: 1
+          0:
+            product: laptop

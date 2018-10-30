@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>jpa_common</groupId>
-  <artifactId>jpa-ghissues</artifactId>
+  <groupId>issue</groupId>
+  <artifactId>jpa-gh25</artifactId>
   <version>1.0-SNAPSHOT</version>
 
   <parent>
@@ -17,17 +17,22 @@
   <properties>
     <!-- remove the following line if you are on Java 7-->
     <java.version>1.8</java.version>
-    <app.entry>jpa_common.AppEntry</app.entry>
+    <app.entry>gh25.AppEntry</app.entry>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.actframework</groupId>
-      <artifactId>act-eclipselink</artifactId>
+      <artifactId>act-hibernate</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.microsoft.sqlserver</groupId>
+      <artifactId>mssql-jdbc</artifactId>
+      <version>7.0.0.jre8</version>
     </dependency>
     <dependency>
       <groupId>com.zaxxer</groupId>
-      <artifactId>HikariCP-java7</artifactId>
+      <artifactId>HikariCP</artifactId>
     </dependency>
   </dependencies>
 

@@ -45,7 +45,7 @@ public class EntityManagerProvider implements
 
     @Override
     public EntityManager get(String s) {
-        return JPAContext.em(svc(s));
+        return svc(s).emFactory.createEntityManager();
     }
 
     private JPAService svc(String s) {

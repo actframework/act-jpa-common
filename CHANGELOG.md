@@ -1,6 +1,9 @@
 # act-jpa-common CHANGE LOG
 
 1.5.2
+* update to act-1.8.8
+* Make injected `EntityManager` be independent of act JPA context #35
+* Make JPADao be stateless
 * Apply new scope for implicit transaction #28
 * it shall use non-readOnly entity manager for POST/PUT/DELETE requests #27
 * `JPAContext.initForJob()` issue when invoking a `Job` within an `ActionContext` #26

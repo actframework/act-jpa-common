@@ -27,25 +27,20 @@ import static act.db.jpa.sql.SQL.Type.*;
 import act.Act;
 import act.app.ActionContext;
 import act.app.DbServiceManager;
-import act.db.DB;
-import act.db.DaoBase;
-import act.db.DbService;
-import act.db.Model;
+import act.db.*;
 import act.db.jpa.sql.SQL;
-import act.inject.param.NoBind;
 import act.util.General;
+import act.util.Stateless;
 import org.osgl.$;
 import org.osgl.util.E;
 import org.osgl.util.S;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import javax.persistence.EntityManager;
 
 @General
-@NoBind
+@Stateless
 public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JPAQuery<MODEL_TYPE>> {
 
     private volatile JPAService _jpa;

@@ -29,8 +29,7 @@ import act.app.ActionContext;
 import act.app.DbServiceManager;
 import act.db.*;
 import act.db.jpa.sql.SQL;
-import act.util.General;
-import act.util.Stateless;
+import act.util.*;
 import org.osgl.$;
 import org.osgl.util.E;
 import org.osgl.util.S;
@@ -40,16 +39,15 @@ import java.util.*;
 import javax.persistence.EntityManager;
 
 @General
-@Stateless
 public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JPAQuery<MODEL_TYPE>> {
 
-    private volatile JPAService _jpa;
-    protected String entityName;
-    protected String createdColumn;
-    protected String lastModifiedColumn;
-    protected String idColumn;
-    protected Field idField;
-    private String qIdList;
+    @Stateless private volatile JPAService _jpa;
+    @Stateless protected String entityName;
+    @Stateless protected String createdColumn;
+    @Stateless protected String lastModifiedColumn;
+    @Stateless protected String idColumn;
+    @Stateless protected Field idField;
+    @Stateless private String qIdList;
 
     public JPADao(Class<ID_TYPE> idType, Class<MODEL_TYPE> modelType, JPAService jpa) {
         super(idType, modelType);

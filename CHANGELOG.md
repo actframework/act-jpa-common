@@ -1,5 +1,8 @@
 # act-jpa-common CHANGE LOG
 
+1.5.3
+* Revert changes that makes `JPADao` be `@Stateless` #36
+
 1.5.2
 * update to act-1.8.8
 * Make injected `EntityManager` be independent of act JPA context #35

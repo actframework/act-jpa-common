@@ -30,13 +30,13 @@
   <parent>
     <groupId>org.actframework</groupId>
     <artifactId>parent</artifactId>
-    <version>1.8.9</version>
+    <version>1.8.10</version>
   </parent>
 
   <properties>
     <scm.url>git@github.com:actframework/act-jpa-common.git</scm.url>
     <cdi-api.version>1.2</cdi-api.version>
-    <act-sql-common.version>1.4.4-SNAPSHOT</act-sql-common.version>
+    <act-sql-common.version>1.4.4</act-sql-common.version>
   </properties>
 
   <scm>

@@ -1,6 +1,8 @@
 # act-jpa-common CHANGE LOG
 
 1.5.3
+* update act to 1.8.9
+* update sql-common to 1.4.4
 * Revert changes that makes `JPADao` be `@Stateless` #36
 
 1.5.2

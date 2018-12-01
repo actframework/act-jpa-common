@@ -1,5 +1,8 @@
 # act-jpa-common CHANGE LOG
 
+1.5.4
+* Add `IN` to `Operator` #37
+
 1.5.3
 * update act to 1.8.9
 * update sql-common to 1.4.4

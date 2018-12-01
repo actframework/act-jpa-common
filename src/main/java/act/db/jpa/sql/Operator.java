@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public enum Operator {
     EQ("=", "eq"),
     NE("<>", "ne", "neq"),
+    IN("in"),
     NOT_NULL("not_null", "notNull") {
         @Override
         public void print(SqlDialect dialect, StringBuilder build, String column, AtomicInteger ordinalId, String entityAliasPrefix) {

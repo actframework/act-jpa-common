@@ -72,7 +72,7 @@ public class TimestampAuditorEnhancer extends AppByteCodeEnhancer<TimestampAudit
         if (!entityListenersFound && (null != createdAt || null != lastModifiedAt)) {
             AnnotationVisitor av = super.visitAnnotation("Ljavax/persistence/EntityListeners;", true);
             AnnotationVisitor av1 = av.visitArray("value");
-            av1.visit(null, Type.getType("Lact/db/jpa/util/TimestampAuditor;"));
+            av1.visit(null, Type.getType("Lact/db/util/AuditHelper;"));
             av1.visitEnd();
             av.visitEnd();
         }

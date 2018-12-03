@@ -1,6 +1,7 @@
 # act-jpa-common CHANGE LOG
 
 1.5.4
+* Move `TimestampAuditor` to act #38
 * Add `IN` to `Operator` #37
 
 1.5.3

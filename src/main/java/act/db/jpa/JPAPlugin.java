@@ -25,7 +25,6 @@ import act.app.App;
 import act.app.event.SysEvent;
 import act.app.event.SysEventId;
 import act.db.jpa.sql.Operator;
-import act.db.jpa.util.TimestampAuditor;
 import act.db.sql.SqlDbPlugin;
 import act.event.ActEventListenerBase;
 import act.event.SysEventListenerBase;
@@ -119,7 +118,6 @@ public abstract class JPAPlugin extends SqlDbPlugin {
                 EntityManagerProvider emp = app.getInstance(EntityManagerProvider.class);
                 app.injector().registerNamedProvider(EntityManager.class, emp);
                 app.injector().registerProvider(EntityManager.class, emp);
-                app.getInstance(TimestampAuditor.class);
                 JPAContext.reset();
             }
         });

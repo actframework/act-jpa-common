@@ -1,5 +1,8 @@
 # act-jpa-common CHANGE LOG
 
+1.5.5 24/Dec/2018
+* SQL Parser orderBy error throw llegalArgumentException: Unknown order dir in order #40
+
 1.5.4 09/Dec/2018
 * Move `TimestampAuditor` to act #38
 * Add `IN` to `Operator` #37

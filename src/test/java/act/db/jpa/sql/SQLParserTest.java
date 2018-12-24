@@ -43,6 +43,12 @@ public class SQLParserTest extends TestBase {
     }
 
     @Test
+    public void testOrderBy() {
+        parseSelect("name,age order by name");
+        eq("SELECT User FROM User User  WHERE User.name = ?1 AND User.age = ?2 ORDER BY User.name");
+    }
+
+    @Test
     public void testSingleField() {
         parseSelect("name");
         eq("SELECT User FROM User User  WHERE User.name = ?1");

@@ -88,7 +88,7 @@ public class TimestampAuditorEnhancer extends AppByteCodeEnhancer<TimestampAudit
                     return new AnnotationVisitor(ASM5, super.visitArray(name)) {
                         @Override
                         public void visitEnd() {
-                            visit(null, Type.getType("Lact/db/jpa/util/TimestampAuditor;"));
+                            visit(null, Type.getType("Lact/db/util/AuditHelper;"));
                             super.visitEnd();
                         }
                     };

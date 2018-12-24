@@ -230,7 +230,7 @@ public class SQL {
             OrderByList orderBy = OrderByList.EMPTY_LIST;
             int sz = list.size();
             if (sz > 1) {
-                orderBy = parseOrderBy(list.drop(0).toArray(new String[sz - 1]));
+                orderBy = parseOrderBy(list.drop(1).toArray(new String[sz - 1]));
             }
             builder.orderBy = orderBy;
             return builder;

@@ -41,6 +41,7 @@ public class JPAContext extends DestroyableBase {
         EntityTransaction tx;
         boolean readOnly;
         JPAService svc;
+        boolean force;
         Info(JPAService svc, boolean readOnly) {
             this.em = svc.createEntityManager(readOnly);
             this.readOnly = readOnly;
@@ -141,6 +142,7 @@ public class JPAContext extends DestroyableBase {
         if (!noTx) {
             E.illegalStateIfNot(_withinTxScope(), "No transaction found");
             boolean readOnly = TxContext.readOnly();
+            boolean force = false;
             for (Info info : data.values()) {
                 EntityTransaction tx = info.tx;
                 if (null != tx && tx.isActive()) {
@@ -150,7 +152,13 @@ public class JPAContext extends DestroyableBase {
                         tx.commit();
                     }
                 }
+                if (info.force) {
+                    force = true;
+                }
                 info.tx = null;
+            }
+            if (force) {
+                TxContext.exitTxScope();
             }
         }
     }
@@ -168,6 +176,7 @@ public class JPAContext extends DestroyableBase {
         if (!ctx._withinTxScope()) {
             jpa.forceBeginTx(em);
             info.tx = em.getTransaction();
+            info.force = true;
         }
         return em;
     }

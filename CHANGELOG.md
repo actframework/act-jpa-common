@@ -1,5 +1,8 @@
 # act-jpa-common CHANGE LOG
 
+1.5.6
+* JPAContext shall make sure TxContext exit scope if scope is started implicity #42
+
 1.5.5 24/Dec/2018
 * SQL Parser orderBy error throw llegalArgumentException: Unknown order dir in order #40
 

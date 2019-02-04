@@ -1,6 +1,6 @@
 # act-jpa-common CHANGE LOG
 
-1.5.6
+1.5.6 04/Feb/2019
 * JPAContext shall make sure TxContext exit scope if scope is started implicity #42
 
 1.5.5 24/Dec/2018

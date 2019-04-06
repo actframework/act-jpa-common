@@ -88,7 +88,16 @@ public abstract class JPAPlugin extends SqlDbPlugin {
         }).bind(BeforeResultCommit.class, new ActEventListenerBase<BeforeResultCommit>() {
             @Override
             public void on(BeforeResultCommit event) {
+                // so when we render result the transaction has
+                // been committed already, thus we get the
+                // id for the new record
+                JPAContext.close();
+            }
+        }).bind(PostHandle.class, new ActEventListenerBase() {
+            @Override
+            public void on(EventObject event) throws Exception {
                 // try close JPAContext anyway
+                // See https://github.com/actframework/act-jpa-common/issues/43
                 JPAContext.close();
             }
         }).bind(PreHandle.class, new ActEventListenerBase() {
@@ -118,7 +127,7 @@ public abstract class JPAPlugin extends SqlDbPlugin {
                 EntityManagerProvider emp = app.getInstance(EntityManagerProvider.class);
                 app.injector().registerNamedProvider(EntityManager.class, emp);
                 app.injector().registerProvider(EntityManager.class, emp);
-                JPAContext.reset();
+                //JPAContext.reset();
             }
         });
         RequestHandlerProxy.registerGlobalInterceptor(new ExceptionInterceptor() {

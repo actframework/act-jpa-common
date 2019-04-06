@@ -1,5 +1,8 @@
 # act-jpa-common CHANGE LOG
 
+1.5.7
+* JPAContext init for websocket handling is not closed at the end of logic #43
+
 1.5.6 04/Feb/2019
 * JPAContext shall make sure TxContext exit scope if scope is started implicity #42
 

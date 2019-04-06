@@ -171,7 +171,7 @@ public class JPAQuery<MODEL_TYPE> implements Query, Dao.Query<MODEL_TYPE, JPAQue
         if (type != SQL.Type.COUNT) {
             return asCount().count();
         }
-        Number n = (Number) q().getSingleResult();
+        Number n = (Number) q().setFlushMode(FlushModeType.COMMIT).getSingleResult();
         return n.longValue();
     }
 

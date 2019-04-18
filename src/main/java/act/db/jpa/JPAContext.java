@@ -193,7 +193,7 @@ public class JPAContext extends DestroyableBase {
     }
 
     public static EntityManager em(JPAService jpa, boolean preferredReadonly) {
-        return ensureContext()._em(jpa, preferredReadonly);
+        return ensureContext(preferredReadonly)._em(jpa, preferredReadonly);
     }
 
     public static void clear(JPAService jpa) {

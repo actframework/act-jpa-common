@@ -1,6 +1,7 @@
 # act-jpa-common CHANGE LOG
 
 1.5.7
+* Make it able to create JPAContext when no one available for query #44
 * JPAContext init for websocket handling is not closed at the end of logic #43
 
 1.5.6 04/Feb/2019

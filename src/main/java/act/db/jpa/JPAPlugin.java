@@ -24,6 +24,7 @@ import act.app.ActionContext;
 import act.app.App;
 import act.app.event.SysEvent;
 import act.app.event.SysEventId;
+import act.db.jpa.inject.JpaDbProviders;
 import act.db.jpa.sql.Operator;
 import act.db.sql.SqlDbPlugin;
 import act.event.ActEventListenerBase;
@@ -127,6 +128,7 @@ public abstract class JPAPlugin extends SqlDbPlugin {
                 EntityManagerProvider emp = app.getInstance(EntityManagerProvider.class);
                 app.injector().registerNamedProvider(EntityManager.class, emp);
                 app.injector().registerProvider(EntityManager.class, emp);
+                JpaDbProviders.classInit(app);
                 //JPAContext.reset();
             }
         });

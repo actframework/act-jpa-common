@@ -36,7 +36,7 @@
   <properties>
     <scm.url>git@github.com:actframework/act-jpa-common.git</scm.url>
     <cdi-api.version>1.2</cdi-api.version>
-    <act-sql-common.version>1.5.1-SNAPSHOT</act-sql-common.version>
+    <act-sql-common.version>1.5.1</act-sql-common.version>
   </properties>
 
   <scm>

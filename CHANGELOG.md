@@ -1,5 +1,9 @@
 # act-jpa-common CHANGE LOG
 
+1.6.1
+* update to act-1.8.28
+* Tune jobId for jobs
+
 1.6.0 02/Jul/2019
 * update to act-1.8.25
 * update to act-sql-common-1.5.0

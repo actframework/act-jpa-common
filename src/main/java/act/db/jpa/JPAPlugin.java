@@ -122,7 +122,7 @@ public abstract class JPAPlugin extends SqlDbPlugin {
                 new NamedQueryExplorer().explore(app);
             }
         });
-        app.jobManager().on(SysEventId.PRE_START, new Runnable() {
+        app.jobManager().on(SysEventId.PRE_START, jobId("class init"), new Runnable() {
             @Override
             public void run() {
                 EntityManagerProvider emp = app.getInstance(EntityManagerProvider.class);

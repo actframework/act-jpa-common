@@ -300,6 +300,14 @@ public class JPADao<ID_TYPE, MODEL_TYPE> extends DaoBase<ID_TYPE, MODEL_TYPE, JP
         return q(COUNT, expression, values);
     }
 
+    @Override
+    public Object processLikeValue(String v) {
+        if (v.contains("%")) {
+            return v;
+        }
+        return S.wrap(v).with("%");
+    }
+
     public EntityManager em() {
         return emForWrite();
     }

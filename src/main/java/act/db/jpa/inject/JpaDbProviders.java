@@ -24,7 +24,6 @@ import act.Act;
 import act.app.App;
 import act.db.DB;
 import act.db.jpa.JPAService;
-import act.db.sql.SqlDbService;
 import org.osgl.inject.Genie;
 import org.osgl.inject.NamedProvider;
 
@@ -50,4 +49,5 @@ public class JpaDbProviders {
         genie.registerProvider(JPAService.class, SQL_JPA_SVC_PROVIDER);
         genie.registerNamedProvider(JPAService.class, NAMED_JPA_DB_SVC_PROVIDER);
     }
+
 }

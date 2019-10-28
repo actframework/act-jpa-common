@@ -52,7 +52,6 @@ import javax.sql.DataSource;
 
 public abstract class JPAService extends SqlDbService {
 
-    protected EntityMetaInfoRepo entityMetaInfoRepo;
     // map sql expression to SQL instance
     protected ConcurrentMap<SQLKey, SQL> sqlCache = new ConcurrentHashMap<>();
 
@@ -70,7 +69,6 @@ public abstract class JPAService extends SqlDbService {
     protected void dataSourceProvided(DataSource dataSource, DataSourceConfig dataSourceConfig, boolean readonly) {
         super.dataSourceProvided(dataSource, dataSourceConfig, readonly);
         String dbId = id();
-        entityMetaInfoRepo = app().entityMetaInfoRepo().forDb(dbId);
         EntityManagerFactory factory = createEntityManagerFactory(dbId, dataSource, readonly, dataSourceConfig);
         if (readonly) {
             this.emFactoryReadOnly = factory;
@@ -237,44 +235,12 @@ public abstract class JPAService extends SqlDbService {
         return namedQueries.get(name);
     }
 
-    String lastModifiedColumn(Class<?> modelClass) {
-        EntityFieldMetaInfo fieldInfo = classInfo(modelClass).lastModifiedAtField();
-        return null == fieldInfo ? null : fieldInfo.columnName();
-    }
-
-    String createdColumn(Class<?> modelClass) {
-        EntityFieldMetaInfo fieldInfo = classInfo(modelClass).createdAtField();
-        return null == fieldInfo ? null : fieldInfo.columnName();
-    }
-
-    String idColumn(Class<?> modelClass) {
-        EntityFieldMetaInfo fieldInfo = classInfo(modelClass).idField();
-        return null == fieldInfo ? null : fieldInfo.columnName();
-    }
-
-    Field idField(Class<?> modelClass) {
-        EntityFieldMetaInfo fieldInfo = classInfo(modelClass).idField();
-        return null == fieldInfo ? null : $.fieldOf(modelClass, fieldInfo.fieldName());
-    }
-
-    String columnName(Field field) {
-        return classInfo(field.getDeclaringClass()).fieldInfo(field.getName()).columnName();
-    }
-
-    String entityName(Class<?> modelClass) {
-        return classInfo(modelClass).entityName();
-    }
-
     SqlDialect dialect() {
         return DefaultSqlDialect.INSTANCE;
     }
 
     EntityManager createEntityManager(boolean readOnly) {
         return (readOnly ? emFactoryReadOnly : emFactory).createEntityManager();
-    }
-
-    private EntityClassMetaInfo classInfo(Class<?> modelClass) {
-        return entityMetaInfoRepo.classMetaInfo(modelClass);
     }
 
     private EntityManagerFactory createEntityManagerFactory(String dbName, DataSource dataSource, boolean readOnly, DataSourceConfig dataSourceConfig) {
@@ -290,8 +256,8 @@ public abstract class JPAService extends SqlDbService {
     ) {
         Properties properties = properties();
         properties = processProperties(properties, dataSourceConfig, null != externalDataSource);
-        List<Class> managedClasses = C.newList(entityMetaInfoRepo.entityClasses());
-        managedClasses.addAll(entityMetaInfoRepo.converterClasses());
+        List<Class> managedClasses = C.newList(entityMetaInfoRepo().entityClasses());
+        managedClasses.addAll(entityMetaInfoRepo().converterClasses());
         if (readOnly) {
             dbName = dbName + "-ro";
         }

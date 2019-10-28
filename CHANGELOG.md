@@ -1,5 +1,9 @@
 # act-jpa-common CHANGE LOG
 
+1.7.0
+* update to act-1.8.29
+* update JPADao - add `processLikeValue` method
+
 1.6.1 30/Sep/2019
 * update to act-1.8.28
 * Tune jobId for jobs

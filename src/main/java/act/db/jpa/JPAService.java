@@ -331,7 +331,6 @@ public abstract class JPAService extends SqlDbService {
 
         @Override
         public int hashCode() {
-
             return $.hc(entityClass, expression, type, columns);
         }
     }

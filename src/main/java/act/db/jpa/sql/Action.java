@@ -110,8 +110,15 @@ public abstract class Action implements SqlPart {
         @Override
         public void print(SqlDialect dialect, StringBuilder builder, AtomicInteger paramId, String entityAliasPrefix) {
             builder.append("UPDATE ").append(fromTarget);
+            boolean first = false;
             for (String column : columns) {
-                builder.append(" SET ").append(entityShortPrefix).append(column).append(" = ?").append(paramId.incrementAndGet());
+                if (first) {
+                    builder.append(", ");
+                } else {
+                    builder.append(" SET ");
+                    first = true;
+                }
+                builder.append(entityShortPrefix).append(column).append(" = ?").append(paramId.incrementAndGet());
             }
         }
     }

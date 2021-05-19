@@ -22,6 +22,7 @@ package act.db.jpa.sql;
 
 import static act.db.jpa.sql.SQL.Parser.parse;
 import static act.db.jpa.sql.SQL.Type.FIND;
+import static act.db.jpa.sql.SQL.Type.UPDATE;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -52,18 +53,24 @@ public class SQLParserTest extends TestBase {
     public void testSingleField() {
         parseSelect("name");
         eq("SELECT User FROM User User  WHERE User.name = ?1");
+        parseUpdate("name", "age");
+        eq("UPDATE User User  SET  User.age = ?1 WHERE User.name = ?2");
     }
 
     @Test
     public void testMultipleFields() {
         parseSelect("name,age");
         eq("SELECT User FROM User User  WHERE User.name = ?1 AND User.age = ?2");
+        parseUpdate("name", "age", "score");
+        eq("UPDATE User User  SET  User.age = ?1,  User.score = ?2 WHERE User.name = ?3");
     }
 
     @Test
     public void testMultipleFieldsWithOp() {
         parseSelect("name like,age between,score <=,date gt");
         eq("SELECT User FROM User User  WHERE User.name LIKE ?1 AND User.age < ?2 AND User.age > ?3 AND User.score <= ?4 AND User.date > ?5");
+        parseUpdate("name like,age between,score <=,date gt", "age", "score");
+        eq("UPDATE User User  SET  User.age = ?1,  User.score = ?2 WHERE User.name LIKE ?3 AND User.age < ?4 AND User.age > ?5 AND User.score <= ?6 AND User.date > ?7");
     }
 
     @Test
@@ -75,6 +82,10 @@ public class SQLParserTest extends TestBase {
 
     private void parseSelect(String expression, String... columns) {
         target = parse(FIND, "User", expression, columns);
+    }
+
+    private void parseUpdate(String expression, String... columns) {
+        target = parse(UPDATE, "User", expression, columns);
     }
 
     private void eq(String expected) {
